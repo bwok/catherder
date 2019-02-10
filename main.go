@@ -26,4 +26,8 @@ func main() {
 		}
 	}()
 
+	// Prepare all the sql statements for later use
+	prepareDatabaseStatements()
+	defer closeDatabaseStatements()
+
 }
