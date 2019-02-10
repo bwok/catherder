@@ -1,2 +1,2 @@
 # catherder
-A website for organising meetings. Mostly I
+A website for organising meetings.
