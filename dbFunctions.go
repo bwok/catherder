@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"log"
 )
 
@@ -89,4 +91,158 @@ func closeDatabaseStatements() {
 			log.Println(err)
 		}
 	}
+}
+
+
+// Selects a MeetUp row by the user hash
+// Also gets all sub objects of the MeetUp row from the date, admin and user tables.
+func (m *MeetUp) GetByUserHash(userHash string) (retErr error) {
+	rows, retErr := preparedStmts["selectMeetupByUserhash"].Query(userHash)
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
+		}
+	}()
+	if retErr != nil {
+		return retErr
+	}
+
+	if rows.Next() {
+		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.Description)
+		if retErr != nil {
+			return retErr
+		}
+	} else {
+		retErr = errors.New("no rows matching the userhash")
+		return retErr
+	}
+
+	// Read admin
+	retErr = m.Admin.GetByMeetUpId(m.Id)
+	if retErr != nil {
+		return retErr
+	}
+
+	// Read all dates with dateid
+	retErr = m.Dates.GetAllByMeetUpId(m.Id)
+	if retErr != nil {
+		return retErr
+	}
+
+	return nil
+}
+
+// Selects a MeetUp row by the admin hash
+// Also gets all sub objects of the MeetUp row from the date, admin and user tables.
+func (m *MeetUp) GetByAdminHash(adminHash string) (retErr error) {
+	rows, retErr := preparedStmts["selectMeetupByAdminhash"].Query(adminHash)
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
+		}
+	}()
+	if retErr != nil {
+		return retErr
+	}
+
+	if rows.Next() {
+		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.Description)
+		if retErr != nil {
+			return retErr
+		}
+	} else {
+		retErr = errors.New("no rows matching the adminhash")
+		return retErr
+	}
+
+	// Read admin
+	retErr = m.Admin.GetByMeetUpId(m.Id)
+	if retErr != nil {
+		return retErr
+	}
+
+	// Read all dates with dateid
+	retErr = m.Dates.GetAllByMeetUpId(m.Id)
+	if retErr != nil {
+		return retErr
+	}
+
+	return nil
+}
+
+// Selects an Admin row by a meetup id
+func (a *Admin) GetByMeetUpId(idMeetup int64) (retErr error) {
+	rows, retErr := preparedStmts["selectAdminByMeetupid"].Query(idMeetup)
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
+		}
+	}()
+	if retErr != nil {
+		return retErr
+	}
+
+	for rows.Next() {
+		retErr = rows.Scan(&a.Id, &a.IdMeetUp, &a.Email, &a.Alerts)
+		if retErr != nil {
+			return retErr
+		}
+	}
+
+	return nil
+}
+
+// Selects all Date rows by a meetup id
+// Also gets all User sub objects for each Date object.
+func (d *Dates) GetAllByMeetUpId(idMeetup int64) (retErr error) {
+	rows, retErr := preparedStmts["selectDatesByMeetupid"].Query(idMeetup)
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
+		}
+	}()
+	if retErr != nil {
+		return retErr
+	}
+
+	for rows.Next() {
+		var date = Date{}
+		retErr = rows.Scan(&date.Id, &date.IdMeetUp, &date.Date)
+		if retErr != nil {
+			return retErr
+		}
+
+		// Read all users with dateid
+		retErr = date.Users.GetAllByDateId(date.Id)
+		if retErr != nil {
+			return retErr
+		}
+		*d = append(*d, date)
+	}
+
+	return nil
+}
+
+// Selects all User rows with date id
+func (u *Users) GetAllByDateId(idDate int64) (retErr error) {
+	rows, retErr := preparedStmts["selectUsersByDateid"].Query(idDate)
+	defer func() {
+		if closeErr := rows.Close(); closeErr != nil {
+			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
+		}
+	}()
+	if retErr != nil {
+		return retErr
+	}
+
+	for rows.Next() {
+		var user = User{}
+		retErr = rows.Scan(&user.Id, &user.IdDate, &user.Name, &user.Available)
+		if retErr != nil {
+			return retErr
+		}
+		*u = append(*u, user)
+	}
+
+	return nil
 }
