@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // CRUD, don't edit by hand.
 
@@ -22,21 +25,23 @@ func (m *MeetUp) Create() error {
 }
 func (m *MeetUp) Read(id int64) (retErr error) {
 	rows, retErr := preparedStmts["selectMeetup"].Query(id)
+	if retErr != nil {
+		return
+	}
 	defer func() {
 		if closeErr := rows.Close(); closeErr != nil {
 			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
 		}
 	}()
 
-	if retErr != nil {
-		return retErr
-	}
-
-	for rows.Next() {
+	if rows.Next() {
 		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.Description)
 		if retErr != nil {
-			return retErr
+			return
 		}
+	} else {
+		retErr = errors.New("no rows")
+		return
 	}
 
 	return nil
@@ -75,21 +80,24 @@ func (a *Admin) Create() error {
 	return nil
 }
 func (a *Admin) Read(id int64) (retErr error) {
-	rows, err := preparedStmts["selectAdmin"].Query(id)
+	rows, retErr := preparedStmts["selectAdmin"].Query(id)
+	if retErr != nil {
+		return
+	}
 	defer func() {
 		if closeErr := rows.Close(); closeErr != nil {
 			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
 		}
 	}()
-	if err != nil {
-		return err
-	}
 
-	for rows.Next() {
-		err = rows.Scan(&a.Id, &a.IdMeetUp, &a.Email, &a.Alerts)
-		if err != nil {
-			return err
+	if rows.Next() {
+		retErr = rows.Scan(&a.Id, &a.IdMeetUp, &a.Email, &a.Alerts)
+		if retErr != nil {
+			return
 		}
+	} else {
+		retErr = errors.New("no rows")
+		return
 	}
 
 	return nil
@@ -132,20 +140,23 @@ func (d *Date) Create() error {
 }
 func (d *Date) Read(id int64) (retErr error) {
 	rows, retErr := preparedStmts["selectDate"].Query(id)
+	if retErr != nil {
+		return
+	}
 	defer func() {
 		if closeErr := rows.Close(); closeErr != nil {
 			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
 		}
 	}()
-	if retErr != nil {
-		return retErr
-	}
 
-	for rows.Next() {
+	if rows.Next() {
 		retErr = rows.Scan(&d.Id, &d.IdMeetUp, &d.Date)
 		if retErr != nil {
-			return retErr
+			return
 		}
+	} else {
+		retErr = errors.New("no rows")
+		return
 	}
 
 	return nil
@@ -184,22 +195,25 @@ func (u *User) Create() error {
 	u.Id = id
 	return nil
 }
-func (u *User) Read(id int) (retErr error) {
+func (u *User) Read(id int64) (retErr error) {
 	rows, retErr := preparedStmts["selectUser"].Query(id)
+	if retErr != nil {
+		return
+	}
 	defer func() {
 		if closeErr := rows.Close(); closeErr != nil {
 			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
 		}
 	}()
-	if retErr != nil {
-		return retErr
-	}
 
-	for rows.Next() {
+	if rows.Next() {
 		retErr = rows.Scan(&u.Id, &u.IdDate, &u.Name, &u.Available)
 		if retErr != nil {
-			return retErr
+			return
 		}
+	} else {
+		retErr = errors.New("no rows")
+		return
 	}
 
 	return nil

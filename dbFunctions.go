@@ -93,7 +93,6 @@ func closeDatabaseStatements() {
 	}
 }
 
-
 // Selects a MeetUp row by the user hash
 // Also gets all sub objects of the MeetUp row from the date, admin and user tables.
 func (m *MeetUp) GetByUserHash(userHash string) (retErr error) {
