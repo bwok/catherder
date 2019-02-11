@@ -54,6 +54,7 @@ func DestroyTestDb(testDbName string) {
 	defer closeDatabaseStatements()
 }
 
+/*
 // Tests the MeetUp.Read method too
 func TestMeetUp_Create(t *testing.T) {
 	testDbName := CreateTestDb(t)
@@ -437,3 +438,4 @@ func TestUser_Delete(t *testing.T) {
 		t.Fatalf("couldn't read row back from date table: %s\n", err)
 	}
 }
+*/

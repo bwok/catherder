@@ -93,6 +93,73 @@ func closeDatabaseStatements() {
 	}
 }
 
+// Creates a meetup and all children in one transaction. Does not update the receiver.
+func (m *MeetUp) CreateMeetUp() error {
+	insTx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Do MeetUp Insert
+	resultMeetUp, err := insTx.Stmt(preparedStmts["insertMeetup"]).Exec(m.UserHash, m.AdminHash, m.Description)
+	if err != nil {
+		if rollBkErr := insTx.Rollback(); rollBkErr != nil {
+			return fmt.Errorf("%s: %s", err, rollBkErr)
+		}
+		return err
+	}
+	idMeetUp, err := resultMeetUp.LastInsertId()
+	if err != nil {
+		if rollBkErr := insTx.Rollback(); rollBkErr != nil {
+			return fmt.Errorf("%s: %s", err, rollBkErr)
+		}
+		return err
+	}
+
+	// Do Admin Insert
+	_, err = insTx.Stmt(preparedStmts["insertAdmin"]).Exec(idMeetUp, m.Admin.Email, m.Admin.Alerts)
+	if err != nil {
+		if rollBkErr := insTx.Rollback(); rollBkErr != nil {
+			return fmt.Errorf("%s: %s", err, rollBkErr)
+		}
+		return err
+	}
+
+	for _, date := range m.Dates {
+		// Do Dates Insert
+		resultDate, err := insTx.Stmt(preparedStmts["insertDate"]).Exec(idMeetUp, date.Date)
+		if err != nil {
+			if rollBkErr := insTx.Rollback(); rollBkErr != nil {
+				return fmt.Errorf("%s: %s", err, rollBkErr)
+			}
+			return err
+		}
+		idDate, err := resultDate.LastInsertId()
+		if err != nil {
+			if rollBkErr := insTx.Rollback(); rollBkErr != nil {
+				return fmt.Errorf("%s: %s", err, rollBkErr)
+			}
+			return err
+		}
+		// Do Users Insert
+		for _, user := range date.Users {
+			_, err := insTx.Stmt(preparedStmts["insertUser"]).Exec(idDate, user.Name, user.Available)
+			if err != nil {
+				if rollBkErr := insTx.Rollback(); rollBkErr != nil {
+					return fmt.Errorf("%s: %s", err, rollBkErr)
+				}
+				return err
+			}
+		}
+	}
+
+	err = insTx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Selects a MeetUp row by the user hash
 // Also gets all sub objects of the MeetUp row from the date, admin and user tables.
 func (m *MeetUp) GetByUserHash(userHash string) (retErr error) {
