@@ -1,0 +1,92 @@
+.meetupCont {
+    padding: 2em 0;
+    display: inline-block;
+    margin: 1em 0;
+}
+.shareText {
+    margin-bottom: 0.5em;
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+.shareLink {
+    background-color: #ffffff;
+}
+.description {
+    margin-bottom: 2em;
+    max-width: 50em;
+}
+
+.username {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+}
+.checkDate {
+    margin: 0.5em;
+}
+
+.columnsContainer {
+    white-space: nowrap;
+}
+.nameColumn {
+    display: inline-block;
+    overflow: hidden;
+    width: 10em;
+    vertical-align: top;
+    border: 0.1rem solid #000000;
+    border-bottom: none;
+}
+.dateColumn {
+    display: inline-block;
+    vertical-align: top;
+    text-align: center;
+    border-top: 0.1rem solid #000000;
+    border-right: 0.1rem solid #000000;
+}
+.dummyBox {
+    display: inline-block;
+    height: 5.5em;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    vertical-align: top;
+    border-bottom: 0.1rem solid #000000;
+}
+.dateBox{
+    box-sizing: border-box;
+    display: inline-block;
+    height: 5.5em;
+    color: #000000;
+    padding: 0.3em;
+    width: 4em;
+    border-bottom: 0.1rem solid #000000;
+}
+.dateBox > span {
+    display: block;
+    font-weight: normal;
+}
+.dateBox > .date {
+    font-weight: bold;
+    font-size: 1.5em;
+}
+.row {
+    height: 2em;
+    box-sizing: border-box;
+    padding: 0.3em;
+    vertical-align: top;
+    border-bottom: 0.1rem solid #000000;
+    background-color: #fff;
+}
+.rowAvailable {
+    background: #cdeaa1;
+}
+.rowUnavailable {
+    background: #fcede9;
+}
+
+.saveButt {
+    margin-top: 1em;
+}

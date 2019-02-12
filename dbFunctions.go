@@ -312,3 +312,28 @@ func (u *Users) GetAllByDateId(idDate int64) (retErr error) {
 
 	return nil
 }
+
+// Creates all users in one transaction. Does not update the receiver.
+func (u *Users) CreateUsers() error {
+	insTx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Do Users Insert
+	for _, user := range *u {
+		_, err := insTx.Stmt(preparedStmts["insertUser"]).Exec(user.IdDate, user.Name, user.Available)
+		if err != nil {
+			if rollErr := insTx.Rollback(); rollErr != nil {
+				return rollErr
+			}
+			return err
+		}
+	}
+
+	err = insTx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}

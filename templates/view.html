@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/served/favicon.ico">
+    <title>View your meet up</title>
+    <link rel="stylesheet" href="/served/css/main.css">
+    <link rel="stylesheet" href="/served/css/view.css">
+</head>
+<body>
+
+<div>
+    <div class="shareText">Share this link with other participants:</div>
+    <div class="shareLink">https://{{.Host}}/id={{.UserHash}}</div>
+</div>
+<div class="meetupCont">
+    <div class="description">{{.Description}}</div>
+    <form action="/adduser/" method="post">
+        <input type="hidden" name="userhash" value="{{.UserHash}}">
+        <div class="columnsContainer">
+            <div class="nameColumn">
+                <div class="dummyBox"></div>{{with (index .Dates 0)}}{{range .Users}}<div class="row">{{.Name}}</div>{{end}}{{end}}
+                <div class="row"><input class="username" type="text" name="username" placeholder="New user..."></div>
+            </div>
+            {{- range .Dates}}<div class="dateColumn"><div class="dateBox"><span>{{.Date | getMonth}}</span><span class="date">{{.Date | getDate}}</span><span>{{.Date | getWeekDay}}</span></div>{{range .Users}}<div class="row {{if eq .Available true}}rowAvailable{{else}}rowUnavailable{{end}}"><input type="checkbox" disabled {{if eq .Available true}}checked{{end}}></div>{{end}}<div class="row"><input type="checkbox" name="{{.Date}}"></div></div>{{end}}
+        </div>
+        <button class="saveButt" type="submit">Save</button>
+
+    </form>
+</div>
+
+</body>
+</html>

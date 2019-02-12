@@ -7,9 +7,24 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
+	"regexp"
 )
 
 // Extra helper functions that don't fit anywhere specifically
+
+
+// Validates a hexadecimal sha256 hash
+func validateHash(hash string) error {
+	matched, err := regexp.MatchString("[^0-9a-fA-F]", hash)
+	if err != nil {
+		return err
+	} else if matched == true {
+		return errors.New("not hexadecimal")
+	} else if len(hash) != 64 {
+		return errors.New("not 64 bytes long")
+	}
+	return nil
+}
 
 // Returns a json error to the client
 func writeJsonError(w http.ResponseWriter, errString string) {
