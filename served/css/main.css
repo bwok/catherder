@@ -1,0 +1,8 @@
+html, body {
+    font-size: 0.9em;
+    font-family: Verdana, Geneva, "Bitstream Vera Sans", "DejaVu Sans", sans-serif;
+}
+body {
+    padding: 2em;
+    margin: 0;
+}
