@@ -1,0 +1,23 @@
+button {
+    margin-right: 0.5em;
+}
+
+#description {
+    resize: none;
+    width: 30em;
+    height: 7em;
+}
+#adminEmail {
+    width: 30em;
+}
+
+.editArea > div {
+    margin: 0.4em 0;
+}
+.editArea *{
+    vertical-align: middle;
+}
+.editArea label {
+    width: 8em;
+    display: inline-block;
+}

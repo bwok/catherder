@@ -49,6 +49,8 @@ func main() {
 	// Serve https traffic
 	httpsServeMux := http.NewServeMux()
 	httpsServeMux.Handle("/served/", http.StripPrefix("/served/", http.FileServer(http.Dir("./served/"))))
+	httpsServeMux.HandleFunc("/new.html", pageNewHandler)
+	httpsServeMux.HandleFunc("/create", ajaxCreateHandler)
 
 	httpsServeMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")

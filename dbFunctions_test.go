@@ -57,6 +57,7 @@ func compareUserObjects(obj1, obj2 User) bool {
 	return true
 }
 
+// Tests most of the other custom sql functions in dbFunctions as a side effect.
 func TestMeetUp_CreateMeetUp(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)

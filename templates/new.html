@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/served/favicon.ico">
+    <title>Create a meet up</title>
+    <link rel="stylesheet" href="/served/css/main.css">
+    <link rel="stylesheet" href="/served/css/datetool.css">
+    <link rel="stylesheet" href="/served/css/new.css">
+    <script type="application/ecmascript" src="/served/js/helpers.js"></script>
+    <script type="application/ecmascript" src="/served/js/datetool.js"></script>
+    <script type="application/ecmascript" src="/served/js/new.js"></script>
+</head>
+<body>
+
+<div class="editArea">
+    <div>
+        <label for="adminEmail">Email:</label><input id="adminEmail" type="email">
+    </div>
+    <div>
+        <label for="notifications">Notifications:</label><input id="notifications" type="checkbox" title="Send me email notifications.">
+    </div>
+    <div>
+        <label for="description">Description:</label><textarea id="description"></textarea>
+    </div>
+    <div id="dateContainer" class="dateContainer"></div>
+    <button id="saveButt" type="button">Save</button><button id="cancelButt" type="button">Cancel</button>
+</div>
+<div id="errorArea" class="errorArea hidden"></div>
+</body>
+</html>
