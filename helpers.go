@@ -12,7 +12,6 @@ import (
 
 // Extra helper functions that don't fit anywhere specifically
 
-
 // Validates a hexadecimal sha256 hash
 func validateHash(hash string) error {
 	matched, err := regexp.MatchString("[^0-9a-fA-F]", hash)

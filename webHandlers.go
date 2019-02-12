@@ -5,9 +5,9 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
-	"html/template"
 	"strconv"
 )
 
@@ -67,15 +67,15 @@ func ajaxCreateHandler(w http.ResponseWriter, r *http.Request) {
 		writeJsonError(w, "Error creating new meetup.")
 	} else {
 		type CreateResponseResult struct {
-			UserLink string `json:"userlink"`
-			EditLink string `json:"editlink"`
+			UserLink  string `json:"userlink"`
+			AdminLink string `json:"adminlink"`
 		}
 		type CreateResponse struct {
 			Result CreateResponseResult `json:"result"`
 			Error  string               `json:"error"`
 		}
 
-		successResponse := CreateResponse{Result: CreateResponseResult{UserLink: newMeetUp.UserHash, EditLink: newMeetUp.AdminHash}, Error: ""}
+		successResponse := CreateResponse{Result: CreateResponseResult{UserLink: newMeetUp.UserHash, AdminLink: newMeetUp.AdminHash}, Error: ""}
 
 		js, err := json.Marshal(successResponse)
 		if err != nil {

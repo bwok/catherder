@@ -11,6 +11,21 @@ button {
     width: 30em;
 }
 
+
+#linkArea {
+    margin-bottom: 4em;
+}
+#linkArea > div {
+    margin-bottom: 0.3em;
+}
+#userLink {
+    display: block;
+    margin-bottom: 2em;
+}
+#adminLink {
+    display: block;
+}
+
 .editArea > div {
     margin: 0.4em 0;
 }

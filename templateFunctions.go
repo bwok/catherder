@@ -21,4 +21,3 @@ func getWeekDay(unixTime int64) string {
 	weekDay := date.Weekday()
 	return weekDay.String()[:3]
 }
-

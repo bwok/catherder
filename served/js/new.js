@@ -30,7 +30,18 @@ function init () {
 				errorArea.textContent = response.error;
 				errorArea.classList.remove("hidden");
 			} else {
-				window.location.href = window.location.origin + "/view?id=" + encodeURIComponent(response.result.userlink);
+				var link = document.getElementById("userLink");
+				link.href = window.location.origin + "/view?id=" + encodeURIComponent(response.result.userlink);
+				link.textContent = window.location.origin + "/view?id=" + encodeURIComponent(response.result.userlink);
+
+				link = document.getElementById("adminLink");
+				link.href = window.location.origin + "/edit?id=" + encodeURIComponent(response.result.adminlink);
+				link.textContent = window.location.origin + "/view?id=" + encodeURIComponent(response.result.adminlink);
+
+				document.getElementById("linkArea").classList.remove("hidden");
+
+				// meetup created, remove the edit area just leaving the links.
+				document.body.removeChild(document.querySelector(".editArea"));
 			}
 		});
 	});
