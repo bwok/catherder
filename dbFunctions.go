@@ -164,35 +164,35 @@ func (m *MeetUp) CreateMeetUp() error {
 // Also gets all sub objects of the MeetUp row from the date, admin and user tables.
 func (m *MeetUp) GetByUserHash(userHash string) (retErr error) {
 	rows, retErr := preparedStmts["selectMeetupByUserhash"].Query(userHash)
+	if retErr != nil {
+		return
+	}
 	defer func() {
 		if closeErr := rows.Close(); closeErr != nil {
 			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
 		}
 	}()
-	if retErr != nil {
-		return retErr
-	}
 
 	if rows.Next() {
 		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.Description)
 		if retErr != nil {
-			return retErr
+			return
 		}
 	} else {
 		retErr = errors.New("no rows matching the userhash")
-		return retErr
+		return
 	}
 
 	// Read admin
 	retErr = m.Admin.GetByMeetUpId(m.Id)
 	if retErr != nil {
-		return retErr
+		return
 	}
 
 	// Read all dates with dateid
 	retErr = m.Dates.GetAllByMeetUpId(m.Id)
 	if retErr != nil {
-		return retErr
+		return
 	}
 
 	return nil
@@ -202,35 +202,35 @@ func (m *MeetUp) GetByUserHash(userHash string) (retErr error) {
 // Also gets all sub objects of the MeetUp row from the date, admin and user tables.
 func (m *MeetUp) GetByAdminHash(adminHash string) (retErr error) {
 	rows, retErr := preparedStmts["selectMeetupByAdminhash"].Query(adminHash)
+	if retErr != nil {
+		return
+	}
 	defer func() {
 		if closeErr := rows.Close(); closeErr != nil {
 			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
 		}
 	}()
-	if retErr != nil {
-		return retErr
-	}
 
 	if rows.Next() {
 		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.Description)
 		if retErr != nil {
-			return retErr
+			return
 		}
 	} else {
 		retErr = errors.New("no rows matching the adminhash")
-		return retErr
+		return
 	}
 
 	// Read admin
 	retErr = m.Admin.GetByMeetUpId(m.Id)
 	if retErr != nil {
-		return retErr
+		return
 	}
 
 	// Read all dates with dateid
 	retErr = m.Dates.GetAllByMeetUpId(m.Id)
 	if retErr != nil {
-		return retErr
+		return
 	}
 
 	return nil
@@ -239,19 +239,19 @@ func (m *MeetUp) GetByAdminHash(adminHash string) (retErr error) {
 // Selects an Admin row by a meetup id
 func (a *Admin) GetByMeetUpId(idMeetup int64) (retErr error) {
 	rows, retErr := preparedStmts["selectAdminByMeetupid"].Query(idMeetup)
+	if retErr != nil {
+		return
+	}
 	defer func() {
 		if closeErr := rows.Close(); closeErr != nil {
 			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
 		}
 	}()
-	if retErr != nil {
-		return retErr
-	}
 
 	for rows.Next() {
 		retErr = rows.Scan(&a.Id, &a.IdMeetUp, &a.Email, &a.Alerts)
 		if retErr != nil {
-			return retErr
+			return
 		}
 	}
 
@@ -262,26 +262,26 @@ func (a *Admin) GetByMeetUpId(idMeetup int64) (retErr error) {
 // Also gets all User sub objects for each Date object.
 func (d *Dates) GetAllByMeetUpId(idMeetup int64) (retErr error) {
 	rows, retErr := preparedStmts["selectDatesByMeetupid"].Query(idMeetup)
+	if retErr != nil {
+		return
+	}
 	defer func() {
 		if closeErr := rows.Close(); closeErr != nil {
 			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
 		}
 	}()
-	if retErr != nil {
-		return retErr
-	}
 
 	for rows.Next() {
 		var date = Date{}
 		retErr = rows.Scan(&date.Id, &date.IdMeetUp, &date.Date)
 		if retErr != nil {
-			return retErr
+			return
 		}
 
 		// Read all users with dateid
 		retErr = date.Users.GetAllByDateId(date.Id)
 		if retErr != nil {
-			return retErr
+			return
 		}
 		*d = append(*d, date)
 	}
@@ -292,20 +292,20 @@ func (d *Dates) GetAllByMeetUpId(idMeetup int64) (retErr error) {
 // Selects all User rows with date id
 func (u *Users) GetAllByDateId(idDate int64) (retErr error) {
 	rows, retErr := preparedStmts["selectUsersByDateid"].Query(idDate)
+	if retErr != nil {
+		return
+	}
 	defer func() {
 		if closeErr := rows.Close(); closeErr != nil {
 			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
 		}
 	}()
-	if retErr != nil {
-		return retErr
-	}
 
 	for rows.Next() {
 		var user = User{}
 		retErr = rows.Scan(&user.Id, &user.IdDate, &user.Name, &user.Available)
 		if retErr != nil {
-			return retErr
+			return
 		}
 		*u = append(*u, user)
 	}
