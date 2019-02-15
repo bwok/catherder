@@ -97,12 +97,12 @@ func TestMeetUp_CreateMeetUp(t *testing.T) {
 	}
 
 	if err := meetUpObj.CreateMeetUp(); err != nil {
-		t.Fatalf("CreateMeetUp() failed %s\n", err)
+		t.Fatalf("CreateMeetUp() failed: %s\n", err)
 	}
 
 	var retMeetUp = MeetUp{}
 	if err := retMeetUp.GetByUserHash(meetUpObj.UserHash); err != nil {
-		t.Fatalf("GetByUserHash() failed %s\n", err)
+		t.Fatalf("GetByUserHash() failed: %s\n", err)
 	}
 
 	if compareMeetUpObjects(meetUpObj, retMeetUp) == false {
@@ -111,10 +111,144 @@ func TestMeetUp_CreateMeetUp(t *testing.T) {
 
 	retMeetUp = MeetUp{}
 	if err := retMeetUp.GetByAdminHash(meetUpObj.AdminHash); err != nil {
-		t.Fatalf("GetByUserHash() failed %s\n", err)
+		t.Fatalf("GetByUserHash() failed: %s\n", err)
 	}
 
 	if compareMeetUpObjects(meetUpObj, retMeetUp) == false {
 		t.Fatalf("MeetUp objects were different.")
+	}
+}
+
+func TestMeetUp_UpdateMeetUpDeleteDates(t *testing.T) {
+	testDbName := CreateTestDb(t)
+	defer DestroyTestDb(testDbName)
+	var dbMeetUpObj MeetUp
+
+	var meetUpObj = MeetUp{
+		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		Dates: Dates{
+			{Date: 1549537200000, Users: Users{
+				{Name: "user1", Available: true},
+				{Name: "user2", Available: false},
+				{Name: "user3", Available: false},
+			}},
+			{Date: 1549623600000, Users: Users{
+				{Name: "user1", Available: false},
+				{Name: "user2", Available: false},
+				{Name: "user3", Available: false},
+			}},
+			{Date: 1549710000000, Users: Users{
+				{Name: "user1", Available: true},
+				{Name: "user2", Available: true},
+				{Name: "user3", Available: true},
+			}},
+			{Date: 1549796400000, Users: Users{
+				{Name: "user1", Available: true},
+				{Name: "user2", Available: false},
+				{Name: "user3", Available: true},
+			}},
+			{Date: 1549882800000, Users: Users{
+				{Name: "user1", Available: false},
+				{Name: "user2", Available: true},
+				{Name: "user3", Available: true},
+			}},
+		},
+		Admin:       Admin{Email: "testy@testy.test", Alerts: true},
+		Description: "ljkas;ldfjk;asldkjf",
+	}
+
+	// Save meetup object and children to database, retrieve again aftward so we have all required IDs
+	if err := meetUpObj.CreateMeetUp(); err != nil {
+		t.Fatalf("CreateMeetUp() failed: %s\n", err)
+	}
+	if err := dbMeetUpObj.GetByUserHash(meetUpObj.UserHash); err != nil {
+		t.Fatalf("GetByUserHash() failed: %s\n", err)
+	}
+
+	// Modify the meetup object
+	var newMeetUpObj = MeetUp{
+		UserHash: meetUpObj.UserHash,
+		AdminHash: meetUpObj.AdminHash,
+		Dates: Dates{
+			{Date: 1549537200000, Users: Users{
+				{Name: "user1", Available: true},
+				{Name: "user2", Available: false},
+				{Name: "user3", Available: false},
+			}},
+		},
+		Admin:       Admin{Email: "klm@nop.qrs", Alerts: false},
+		Description: "hij",
+	}
+
+	// Update the database, and compare the updated receiver object the new meetup object
+	if err := dbMeetUpObj.UpdateMeetUpDeleteDates(&newMeetUpObj); err != nil {
+		t.Fatalf("GetByUserHash() failed: %s\n", err)
+	}
+	if compareMeetUpObjects(dbMeetUpObj, newMeetUpObj) == false {
+		t.Errorf("MeetUp objects were different.\nupdated: %+v\nnew: %+v\n", meetUpObj, newMeetUpObj)
+	}
+
+	// Compare the database version with the updated receiver object.
+	// Get saved meetup object and children with IDs etc.
+	dbMeetUpObj = MeetUp{}
+	if err := dbMeetUpObj.GetByUserHash(meetUpObj.UserHash); err != nil {
+		t.Fatalf("GetByUserHash() failed: %s\n", err)
+	}
+	if compareMeetUpObjects(dbMeetUpObj, newMeetUpObj) == false {
+		t.Errorf("MeetUp objects were different.\ndatabase: %+v\nnew: %+v\n", dbMeetUpObj, newMeetUpObj)
+	}
+}
+
+
+func TestMeetUp_DeleteByAdminHash(t *testing.T) {
+	testDbName := CreateTestDb(t)
+	defer DestroyTestDb(testDbName)
+
+	var meetUpObj = MeetUp{
+		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		Dates: Dates{
+			{Date: 1549537200000, Users: Users{
+				{Name: "user1", Available: true},
+				{Name: "user2", Available: false},
+				{Name: "user3", Available: false},
+			}},
+			{Date: 1549623600000, Users: Users{
+				{Name: "user1", Available: false},
+				{Name: "user2", Available: false},
+				{Name: "user3", Available: false},
+			}},
+			{Date: 1549710000000, Users: Users{
+				{Name: "user1", Available: true},
+				{Name: "user2", Available: true},
+				{Name: "user3", Available: true},
+			}},
+			{Date: 1549796400000, Users: Users{
+				{Name: "user1", Available: true},
+				{Name: "user2", Available: false},
+				{Name: "user3", Available: true},
+			}},
+			{Date: 1549882800000, Users: Users{
+				{Name: "user1", Available: false},
+				{Name: "user2", Available: true},
+				{Name: "user3", Available: true},
+			}},
+		},
+		Admin:       Admin{Email: "testy@testy.test", Alerts: true},
+		Description: "ljkas;ldfjk;asldkjf",
+	}
+
+	if err := meetUpObj.CreateMeetUp(); err != nil {
+		t.Fatalf("CreateMeetUp() failed: %s\n", err)
+	}
+
+	if err := meetUpObj.DeleteByAdminHash(meetUpObj.AdminHash); err != nil {
+		t.Fatalf("DeleteByAdminHash() failed: %s\n", err)
+		return
+	}
+
+	if err := meetUpObj.GetByUserHash(meetUpObj.UserHash); err.Error() != "no rows matching the userhash" {
+		t.Fatalf("GetByUserHash() failed: %s\n", err)
 	}
 }

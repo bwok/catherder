@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/served/favicon.ico">
+    <title>Edit a meet up</title>
+    <link rel="stylesheet" href="/served/css/main.css">
+    <link rel="stylesheet" href="/served/css/new.css">
+    <link rel="stylesheet" href="/served/css/datetool.css">
+    <link rel="stylesheet" href="/served/css/admin.css">
+    <script type="application/ecmascript" src="/served/js/helpers.js"></script>
+    <script type="application/ecmascript" src="/served/js/admin.js"></script>
+</head>
+<body>
+<input id="userHash" type="hidden" value="{{.UserHash}}">
+<div class="editArea">
+    <div>
+        <label for="adminEmail">Email:</label><input id="adminEmail" type="email" value="{{.Admin.Email}}">
+    </div>
+    <div>
+        <label for="notifications">Notifications:</label><input id="notifications" type="checkbox" title="Send me email notifications." {{if eq .Admin.Alerts true}}checked{{end}}>
+    </div>
+    <div>
+        <label for="description">Description:</label><textarea id="description">{{.Description}}</textarea>
+    </div>
+    <div id="dateContainer" class="dateContainer"><div class="dateScrollCont">
+            {{- range .Dates}}<div class="dateBox selectedDate" data-date="{{.Date}}"><span>{{.Date | getMonth}}</span><span class="date">{{.Date | getDate}}</span><span>{{.Date | getWeekDay}}</span></div>{{end}}
+        </div></div>
+    <button id="saveButt" type="button">Save</button><button id="cancelButt" type="button">Cancel</button><button id="deleteButt" type="button">Delete</button>
+</div>
+<div id="errorArea" class="errorArea hidden"></div>
+
+</body>
+</html>

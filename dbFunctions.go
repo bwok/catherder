@@ -46,10 +46,11 @@ var preparedStmts = make(map[string]*sql.Stmt) // Prepared statements that funct
 var prepStmtInit = map[string]string{
 	"insertMeetup":            "INSERT INTO meetup(userhash, adminhash, description) values(?,?,?)",
 	"selectMeetup":            "SELECT idmeetup, userhash, adminhash, description FROM meetup WHERE idmeetup= ?",
-	"updateMeetup":            "UPDATE meetup SET userhash = ?, adminhash = ?, description = ? WHERE idmeetup = ?",
+	"updateMeetup":            "UPDATE meetup SET description = ? WHERE idmeetup = ?",
 	"deleteMeetup":            "DELETE from meetup WHERE idmeetup = ?",
 	"selectMeetupByUserhash":  "SELECT idmeetup, userhash, adminhash, description FROM meetup WHERE userhash= ?",
 	"selectMeetupByAdminhash": "SELECT idmeetup, userhash, adminhash, description FROM meetup WHERE adminhash= ?",
+	"deleteMeetupByAdminhash":            "DELETE from meetup WHERE adminhash = ?",
 
 	"insertAdmin":           "INSERT INTO admin(meetup_idmeetup, email, alerts) values(?,?,?)",
 	"selectAdmin":           "SELECT idadmin, meetup_idmeetup, email, alerts FROM admin WHERE idadmin= ?",
@@ -159,6 +160,80 @@ func (m *MeetUp) CreateMeetUp() error {
 	}
 	return nil
 }
+
+// Updates some values of the meetup and children. Unwanted date and user rows get deleted.
+func (m *MeetUp) UpdateMeetUpDeleteDates(newMeetUp *MeetUp) error {
+	updateTx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Do MeetUp Update.
+	_, err = updateTx.Stmt(preparedStmts["updateMeetup"]).Exec(newMeetUp.Description, m.Id)
+	if err != nil {
+		if rollBkErr := updateTx.Rollback(); rollBkErr != nil {
+			return fmt.Errorf("%s: %s", err, rollBkErr)
+		}
+		return err
+	}
+
+	// Do Admin Update
+	_, err = updateTx.Stmt(preparedStmts["updateAdmin"]).Exec(newMeetUp.Admin.Email, newMeetUp.Admin.Alerts, m.Admin.Id)
+	if err != nil {
+		if rollBkErr := updateTx.Rollback(); rollBkErr != nil {
+			return fmt.Errorf("%s: %s", err, rollBkErr)
+		}
+		return err
+	}
+
+
+	// Delete Date rows in db that aren't in the list received from the client. Users get cascade deleted.
+	var updatedDatesSlice = make(Dates, 0)
+	for dbIndex, dbDate := range m.Dates {
+		var contains = false
+
+		for _, newDate := range newMeetUp.Dates {
+			if dbDate.Date == newDate.Date {
+				contains = true
+				break
+			}
+		}
+
+		if contains == false {
+			_, err := updateTx.Stmt(preparedStmts["deleteDate"]).Exec(dbDate.Id)
+			if err != nil {
+				if rollBkErr := updateTx.Rollback(); rollBkErr != nil {
+					return fmt.Errorf("%s: %s", err, rollBkErr)
+				}
+				return err
+			}
+		} else {
+			updatedDatesSlice = append(updatedDatesSlice, m.Dates[dbIndex])
+		}
+	}
+
+	if err = updateTx.Commit(); err != nil {
+		return err
+	}
+
+	// Update was successful, update the receiver values
+	m.Description = newMeetUp.Description
+	m.Admin.Email = newMeetUp.Admin.Email
+	m.Admin.Alerts = newMeetUp.Admin.Alerts
+	m.Dates = updatedDatesSlice
+
+	return nil
+}
+
+// Deletes a meetup by its admin hash. Deletes get cascaded to the other tables.
+func (m *MeetUp) DeleteByAdminHash(adminHash string) error {
+	if _, err := preparedStmts["deleteMeetupByAdminhash"].Exec(adminHash); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 
 // Selects a MeetUp row by the user hash
 // Also gets all sub objects of the MeetUp row from the date, admin and user tables.
@@ -271,6 +346,7 @@ func (d *Dates) GetAllByMeetUpId(idMeetup int64) (retErr error) {
 		}
 	}()
 
+	*d = make(Dates, 0)
 	for rows.Next() {
 		var date = Date{}
 		retErr = rows.Scan(&date.Id, &date.IdMeetUp, &date.Date)
@@ -301,6 +377,7 @@ func (u *Users) GetAllByDateId(idDate int64) (retErr error) {
 		}
 	}()
 
+	*u = make(Users, 0)
 	for rows.Next() {
 		var user = User{}
 		retErr = rows.Scan(&user.Id, &user.IdDate, &user.Name, &user.Available)

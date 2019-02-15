@@ -22,8 +22,7 @@ func CreateTestDb(t *testing.T) string {
 	var err error
 	testDbName := MakeTestFile(t)
 
-	db, err = sql.Open("sqlite3", testDbName)
-	if err != nil {
+	if db, err = sql.Open("sqlite3", "file:" + testDbName + "?_foreign_keys=1"); err != nil {
 		t.Fatal("Failed to open database:", err)
 	}
 
@@ -104,7 +103,7 @@ func TestMeetUp_Update(t *testing.T) {
 		t.Fatalf("couldn't read row back from meetup table: %s\n", err)
 	}
 
-	if retMeetUp.Id != meetUp.Id || retMeetUp.UserHash != "xyz" || retMeetUp.AdminHash != "uvw" || retMeetUp.Description != "rst" {
+	if retMeetUp.Id != meetUp.Id || retMeetUp.Description != "rst" {
 		t.Errorf("returned row from DB was different to the one updated. updated: %+v, returned: %+v\n", meetUp, retMeetUp)
 	}
 }

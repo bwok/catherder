@@ -16,7 +16,7 @@ func main() {
 
 	// Check the database file is present, open it
 	if _, err = os.Stat("./data.sqlite"); err == nil {
-		if db, err = sql.Open("sqlite3", "./data.sqlite"); err != nil {
+		if db, err = sql.Open("sqlite3", "file:data.sqlite?_foreign_keys=true"); err != nil {
 			log.Fatal(err)
 		}
 	} else if os.IsNotExist(err) {
@@ -53,6 +53,9 @@ func main() {
 	httpsServeMux.HandleFunc("/create", ajaxCreateHandler)
 	httpsServeMux.HandleFunc("/view", pageViewHandler)
 	httpsServeMux.HandleFunc("/adduser/", addUserHandler)
+	httpsServeMux.HandleFunc("/admin", pageAdminHandler)
+	httpsServeMux.HandleFunc("/adminsave", ajaxAdminSaveHandler)
+	httpsServeMux.HandleFunc("/admindelete", ajaxAdminDeleteHandler)
 
 	httpsServeMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")

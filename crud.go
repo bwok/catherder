@@ -47,7 +47,7 @@ func (m *MeetUp) Read(id int64) (retErr error) {
 	return nil
 }
 func (m *MeetUp) Update() error {
-	_, err := preparedStmts["updateMeetup"].Exec(m.UserHash, m.AdminHash, m.Description, m.Id)
+	_, err := preparedStmts["updateMeetup"].Exec(m.Description, m.Id)
 	if err != nil {
 		return err
 	}

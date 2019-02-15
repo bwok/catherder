@@ -206,3 +206,157 @@ func addUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Location", "/view?id="+userHash)
 	w.WriteHeader(http.StatusFound)
 }
+
+// Handles requests to admin.html
+func pageAdminHandler(w http.ResponseWriter, r *http.Request) {
+	var err error
+	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';")
+
+	defer func() {
+		if closeErr := r.Body.Close(); closeErr != nil {
+			log.Println(closeErr)
+		}
+	}()
+
+	if err := r.ParseForm(); err != nil {
+		log.Printf("pageAdminHandler: error parsing form %s.\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	adminHash := r.FormValue("id")
+	meetUpObj := MeetUp{}
+
+	// Check the adminhash is valid
+	if err = validateHash(adminHash); err != nil {
+		log.Printf("pageAdminHandler: error checking adminhash %s.\n", err)
+		http.Error(w, "Invalid URL", http.StatusInternalServerError)
+		return
+	}
+
+	if err = meetUpObj.GetByAdminHash(adminHash); err != nil {
+		if err.Error() == "no rows matching the adminhash" { // No rows found for this hash, send the user to the start page.
+			w.Header().Set("Location", "/")
+			w.WriteHeader(http.StatusFound)
+		} else {
+			log.Printf("pageAdminHandler: err getting by adminhash: %s\n", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	var adminTemplate = template.Must(template.New("admin.html").
+		Funcs(template.FuncMap{"getMonth": getMonth, "getDate": getDate, "getWeekDay": getWeekDay}).
+		ParseFiles("templates/admin.html"))
+
+	if err = adminTemplate.Execute(w, meetUpObj); err != nil {
+		log.Printf("executing template failed: %s\n", err)
+	}
+}
+
+
+// Updates an edited MeetUp.
+func ajaxAdminSaveHandler(w http.ResponseWriter, r *http.Request) {
+	var err error
+
+	defer func() {
+		if closeErr := r.Body.Close(); closeErr != nil {
+			log.Printf("ajaxAdminSaveHandler failed: %s\n", closeErr)
+		}
+	}()
+
+	adminHash := r.FormValue("id")
+	var newMeetUp MeetUp
+	var currMeetUp MeetUp
+
+	if err = readAndValidateJsonMeetUp(r, &newMeetUp); err != nil {
+		writeJsonError(w, err.Error())
+		return
+	}
+
+	// Check the adminhash is valid
+	if err = validateHash(adminHash); err != nil {
+		log.Printf("ajaxAdminSaveHandler: error checking adminhash %s.\n", err)
+		http.Error(w, "Invalid URL", http.StatusInternalServerError)
+		return
+	}
+
+	//Get MeetUp object by adminhash
+	if err = currMeetUp.GetByAdminHash(adminHash); err != nil {
+		if err.Error() == "no rows matching the adminhash" { // No rows found for this hash, send the user to the start page.
+			w.Header().Set("Location", "/")
+			w.WriteHeader(http.StatusFound)
+		} else {
+			log.Printf("ajaxAdminSaveHandler: err getting by adminhash: %s\n", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Update the database.
+	if err = currMeetUp.UpdateMeetUpDeleteDates(&newMeetUp); err != nil {
+		log.Printf("ajaxAdminSaveHandler: err updating MeetUp: %s\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	type Response struct {
+		Result string `json:"result"`
+		Error  string `json:"error"`
+	}
+
+	successResponse := Response{Result: currMeetUp.UserHash, Error: ""}
+
+	js, err := json.Marshal(successResponse)
+	if err != nil {
+		writeJsonError(w, err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	if _, err = w.Write(js); err != nil {
+		log.Printf("ajaxAdminSaveHandler, error writing response. %s\n", err)
+	}
+}
+
+// Deletes a MeetUp.
+func ajaxAdminDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	var err error
+
+	defer func() {
+		if closeErr := r.Body.Close(); closeErr != nil {
+			log.Printf("ajaxAdminDeleteHandler failed: %s\n", closeErr)
+		}
+	}()
+
+	var dbMeetUp MeetUp
+	adminHash := r.FormValue("id")
+
+	// Delete MeetUp object by adminhash
+	if err = dbMeetUp.DeleteByAdminHash(adminHash); err != nil {
+		log.Printf("ajaxAdminDeleteHandler: err deleting MeetUp: %s\n", err)
+		writeJsonError(w, "error deleting meetup")
+		return
+	}
+
+	type Response struct {
+		Result string `json:"result"`
+		Error  string `json:"error"`
+	}
+
+	successResponse := Response{Result: "", Error: ""}
+
+	js, err := json.Marshal(successResponse)
+	if err != nil {
+		writeJsonError(w, err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if _, err = w.Write(js); err != nil {
+		log.Printf("ajaxAdminDeleteHandler, error writing response. %s\n", err)
+	}
+
+	}
