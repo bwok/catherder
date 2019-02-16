@@ -255,7 +255,6 @@ func pageAdminHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 // Updates an edited MeetUp.
 func ajaxAdminSaveHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
@@ -359,4 +358,4 @@ func ajaxAdminDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ajaxAdminDeleteHandler, error writing response. %s\n", err)
 	}
 
-	}
+}

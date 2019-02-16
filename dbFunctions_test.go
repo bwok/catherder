@@ -168,7 +168,7 @@ func TestMeetUp_UpdateMeetUpDeleteDates(t *testing.T) {
 
 	// Modify the meetup object
 	var newMeetUpObj = MeetUp{
-		UserHash: meetUpObj.UserHash,
+		UserHash:  meetUpObj.UserHash,
 		AdminHash: meetUpObj.AdminHash,
 		Dates: Dates{
 			{Date: 1549537200000, Users: Users{
@@ -199,7 +199,6 @@ func TestMeetUp_UpdateMeetUpDeleteDates(t *testing.T) {
 		t.Errorf("MeetUp objects were different.\ndatabase: %+v\nnew: %+v\n", dbMeetUpObj, newMeetUpObj)
 	}
 }
-
 
 func TestMeetUp_DeleteByAdminHash(t *testing.T) {
 	testDbName := CreateTestDb(t)

@@ -54,7 +54,7 @@ func prepareDatabaseStatements() {
 		"deleteMeetup":            "DELETE from meetup WHERE idmeetup = ?",
 		"selectMeetupByUserhash":  "SELECT idmeetup, userhash, adminhash, description FROM meetup WHERE userhash= ?",
 		"selectMeetupByAdminhash": "SELECT idmeetup, userhash, adminhash, description FROM meetup WHERE adminhash= ?",
-		"deleteMeetupByAdminhash":            "DELETE from meetup WHERE adminhash = ?",
+		"deleteMeetupByAdminhash": "DELETE from meetup WHERE adminhash = ?",
 
 		"insertAdmin":           "INSERT INTO admin(meetup_idmeetup, email, alerts) values(?,?,?)",
 		"selectAdmin":           "SELECT idadmin, meetup_idmeetup, email, alerts FROM admin WHERE idadmin= ?",
@@ -187,7 +187,6 @@ func (m *MeetUp) UpdateMeetUpDeleteDates(newMeetUp *MeetUp) error {
 		return err
 	}
 
-
 	// Delete Date rows in db that aren't in the list received from the client. Users get cascade deleted.
 	var updatedDatesSlice = make(Dates, 0)
 	for dbIndex, dbDate := range m.Dates {
@@ -234,7 +233,6 @@ func (m *MeetUp) DeleteByAdminHash(adminHash string) error {
 
 	return nil
 }
-
 
 // Selects a MeetUp row by the user hash
 // Also gets all sub objects of the MeetUp row from the date, admin and user tables.

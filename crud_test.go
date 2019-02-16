@@ -22,7 +22,7 @@ func CreateTestDb(t *testing.T) string {
 	var err error
 	testDbName := MakeTestFile(t)
 
-	if db, err = sql.Open("sqlite3", "file:" + testDbName + "?_foreign_keys=1"); err != nil {
+	if db, err = sql.Open("sqlite3", "file:"+testDbName+"?_foreign_keys=1"); err != nil {
 		t.Fatal("Failed to open database:", err)
 	}
 
