@@ -39,41 +39,42 @@ type MeetUp struct {
 	Description string `json:"description"`
 }
 
-var preparedStmts = make(map[string]*sql.Stmt) // Prepared statements that functions can use.
-
-// A map of sql statements that get prepared in prepareDatabaseStatements()
+// Prepared statements that functions can use.
 // They get closed at the termination of the program in closeDatabaseStatements()
-var prepStmtInit = map[string]string{
-	"insertMeetup":            "INSERT INTO meetup(userhash, adminhash, description) values(?,?,?)",
-	"selectMeetup":            "SELECT idmeetup, userhash, adminhash, description FROM meetup WHERE idmeetup= ?",
-	"updateMeetup":            "UPDATE meetup SET description = ? WHERE idmeetup = ?",
-	"deleteMeetup":            "DELETE from meetup WHERE idmeetup = ?",
-	"selectMeetupByUserhash":  "SELECT idmeetup, userhash, adminhash, description FROM meetup WHERE userhash= ?",
-	"selectMeetupByAdminhash": "SELECT idmeetup, userhash, adminhash, description FROM meetup WHERE adminhash= ?",
-	"deleteMeetupByAdminhash":            "DELETE from meetup WHERE adminhash = ?",
-
-	"insertAdmin":           "INSERT INTO admin(meetup_idmeetup, email, alerts) values(?,?,?)",
-	"selectAdmin":           "SELECT idadmin, meetup_idmeetup, email, alerts FROM admin WHERE idadmin= ?",
-	"updateAdmin":           "UPDATE admin SET email = ?, alerts = ? WHERE idadmin = ?",
-	"deleteAdmin":           "DELETE from admin WHERE idadmin = ?",
-	"selectAdminByMeetupid": "SELECT idadmin, meetup_idmeetup, email, alerts FROM admin WHERE meetup_idmeetup= ?",
-
-	"insertDate":            "INSERT INTO date(meetup_idmeetup, date) values(?,?)",
-	"selectDate":            "SELECT iddate,meetup_idmeetup,date FROM date WHERE iddate= ?",
-	"updateDate":            "UPDATE date SET date = ? WHERE iddate = ?",
-	"deleteDate":            "DELETE from date WHERE iddate = ?",
-	"selectDatesByMeetupid": "SELECT iddate, meetup_idmeetup, date FROM date WHERE meetup_idmeetup= ?",
-
-	"insertUser":          "INSERT INTO user(date_iddate, name, available) values(?,?,?)",
-	"selectUser":          "SELECT iduser,date_iddate,name,available FROM user WHERE iduser= ?",
-	"updateUser":          "UPDATE user SET name = ?, available = ? WHERE iduser = ?",
-	"deleteUser":          "DELETE from user WHERE iduser = ?",
-	"selectUsersByDateid": "SELECT iduser,date_iddate,name,available FROM user WHERE date_iddate= ?",
-}
+var preparedStmts = make(map[string]*sql.Stmt)
 
 // prepares all the required statements for later use.
 // log.Fatal on error
 func prepareDatabaseStatements() {
+	// A map of sql statements that get prepared in prepareDatabaseStatements()
+	var prepStmtInit = map[string]string{
+		"insertMeetup":            "INSERT INTO meetup(userhash, adminhash, description) values(?,?,?)",
+		"selectMeetup":            "SELECT idmeetup, userhash, adminhash, description FROM meetup WHERE idmeetup= ?",
+		"updateMeetup":            "UPDATE meetup SET description = ? WHERE idmeetup = ?",
+		"deleteMeetup":            "DELETE from meetup WHERE idmeetup = ?",
+		"selectMeetupByUserhash":  "SELECT idmeetup, userhash, adminhash, description FROM meetup WHERE userhash= ?",
+		"selectMeetupByAdminhash": "SELECT idmeetup, userhash, adminhash, description FROM meetup WHERE adminhash= ?",
+		"deleteMeetupByAdminhash":            "DELETE from meetup WHERE adminhash = ?",
+
+		"insertAdmin":           "INSERT INTO admin(meetup_idmeetup, email, alerts) values(?,?,?)",
+		"selectAdmin":           "SELECT idadmin, meetup_idmeetup, email, alerts FROM admin WHERE idadmin= ?",
+		"updateAdmin":           "UPDATE admin SET email = ?, alerts = ? WHERE idadmin = ?",
+		"deleteAdmin":           "DELETE from admin WHERE idadmin = ?",
+		"selectAdminByMeetupid": "SELECT idadmin, meetup_idmeetup, email, alerts FROM admin WHERE meetup_idmeetup= ?",
+
+		"insertDate":            "INSERT INTO date(meetup_idmeetup, date) values(?,?)",
+		"selectDate":            "SELECT iddate,meetup_idmeetup,date FROM date WHERE iddate= ?",
+		"updateDate":            "UPDATE date SET date = ? WHERE iddate = ?",
+		"deleteDate":            "DELETE from date WHERE iddate = ?",
+		"selectDatesByMeetupid": "SELECT iddate, meetup_idmeetup, date FROM date WHERE meetup_idmeetup= ?",
+
+		"insertUser":          "INSERT INTO user(date_iddate, name, available) values(?,?,?)",
+		"selectUser":          "SELECT iduser,date_iddate,name,available FROM user WHERE iduser= ?",
+		"updateUser":          "UPDATE user SET name = ?, available = ? WHERE iduser = ?",
+		"deleteUser":          "DELETE from user WHERE iduser = ?",
+		"selectUsersByDateid": "SELECT iduser,date_iddate,name,available FROM user WHERE date_iddate= ?",
+	}
+
 	for key, val := range prepStmtInit {
 		stmt, err := db.Prepare(val)
 
