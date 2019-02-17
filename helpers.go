@@ -16,6 +16,7 @@ import (
 func validateHash(hash string) error {
 	matched, err := regexp.MatchString("[^0-9a-fA-F]", hash)
 	if err != nil {
+		log.Printf("validateHash regexp.MatchString failed on hash %s: %v\n", hash, err)
 		return err
 	} else if matched == true {
 		return errors.New("not hexadecimal")
@@ -33,6 +34,7 @@ func writeJsonError(w http.ResponseWriter, errString string) {
 	}
 	js, err := json.Marshal(outMap)
 	if err != nil {
+		log.Printf("writeJsonError json marshalling failed: %s\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -40,6 +42,7 @@ func writeJsonError(w http.ResponseWriter, errString string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if _, err = w.Write(js); err != nil {
+		log.Printf("writeJsonError failed writing the response: %s\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -52,7 +55,7 @@ func readAndValidateJsonMeetUp(r *http.Request, meetUp *MeetUp) error {
 
 	// Decode the json into a MeetUp struct
 	if err = json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(meetUp); err != nil { // 4KB max json length
-		log.Printf("invalid json: %s\n", err)
+		log.Printf("readAndValidateJsonMeetUp invalid json: %s\n", err)
 		return errors.New("invalid json")
 	}
 

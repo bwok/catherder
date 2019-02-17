@@ -108,7 +108,6 @@ func pageViewHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check the userhash is valid
 	if err = validateHash(userHash); err != nil {
-		log.Printf("pageViewHandler: error checking userHash %s.\n", err)
 		http.Error(w, "Invalid URL", http.StatusInternalServerError)
 		return
 	}
@@ -230,7 +229,6 @@ func pageAdminHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check the adminhash is valid
 	if err = validateHash(adminHash); err != nil {
-		log.Printf("pageAdminHandler: error checking adminhash %s.\n", err)
 		http.Error(w, "Invalid URL", http.StatusInternalServerError)
 		return
 	}
@@ -276,7 +274,6 @@ func ajaxAdminSaveHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check the adminhash is valid
 	if err = validateHash(adminHash); err != nil {
-		log.Printf("ajaxAdminSaveHandler: error checking adminhash %s.\n", err)
 		http.Error(w, "Invalid URL", http.StatusInternalServerError)
 		return
 	}
