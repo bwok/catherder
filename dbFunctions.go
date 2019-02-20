@@ -20,7 +20,7 @@ type Users []User
 type Date struct {
 	Id       int64
 	IdMeetUp int64
-	Date     int64 `json:"date"`
+	Date     int64 `json:"date"`	// This is a UNIX timestamp in milliseconds, as per ecma script defines it. "The number of milliseconds between 1 January 1970 00:00:00 UTC and the given date."
 	Users    Users `json:"users"`
 }
 type Dates []Date
