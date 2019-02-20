@@ -29,3 +29,11 @@ func TestValidateHash(t *testing.T) {
 		}
 	}
 }
+
+func TestWriteJsonError(t *testing.T) {
+	// TODO test
+}
+
+func TestReadAndValidateJsonMeetUp(t *testing.T) {
+	// TODO test
+}

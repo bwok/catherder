@@ -314,6 +314,22 @@ func TestMeetUp_GetByAdminHash(t *testing.T) {
 	}
 }
 
+func TestAdmin_GetByMeetUpId(t *testing.T) {
+	// TODO test
+}
+
+func TestDates_GetAllByMeetUpId(t *testing.T) {
+	// TODO test
+}
+
+func TestUsers_GetAllByDateId(t *testing.T) {
+	// TODO test
+}
+
+func TestUsers_CreateUsers(t *testing.T) {
+	// TODO test
+}
+
 /*
 Helper functions to compare some of the properties of various database objects.
 The IDs don't get compared as one of the passed objects usually doesn't have any
