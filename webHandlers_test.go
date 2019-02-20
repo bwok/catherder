@@ -6,7 +6,6 @@ func TestPageNewHandler(t *testing.T) {
 	// TODO test
 }
 
-
 func TestAjaxCreateHandler(t *testing.T) {
 	// TODO test
 }
@@ -27,8 +26,6 @@ func TestAjaxAdminSaveHandler(t *testing.T) {
 	// TODO test
 }
 
-
 func TestAjaxAdminDeleteHandler(t *testing.T) {
 	// TODO test
 }
-
