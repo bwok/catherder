@@ -11,9 +11,9 @@ var dateTool = new function () {
 
 	/**
 	 * Initialises the date tool. Throws an exception if startDate is not a date object.
-	 * @param parentElement
-	 * @param startDate
-	 * @param endDate
+	 * @param {HTMLElement} parentElement
+	 * @param {Date} startDate
+	 * @param {Date} [endDate=]
 	 */
 	this.init = function (parentElement, startDate, endDate) {
 		if (parentElement instanceof Node === false || document.contains(parentElement) === false) {
@@ -73,10 +73,10 @@ var dateTool = new function () {
 
 	/**
 	 * Scrolls elements left or right. Each element
-	 * @param direction -1 scrolls left, 1 scrolls right
+	 * @param {number} direction -1 scrolls left, 1 scrolls right
 	 */
 	function scrollElements(direction) {
-		var startDate = new Date(currDate.valueOf());
+		var startDate = new Date(currDate.valueOf().toString());
 
 		if (direction === -1 && minDate < startDate) {
 			makeElements(-1);
@@ -87,7 +87,7 @@ var dateTool = new function () {
 
 	/**
 	 * Makes the date elements for the tool
-	 * @param direction            -1 to prepend nodes, 1 to append them
+	 * @param {number }direction	-1 to prepend nodes, 1 to append them
 	 */
 	function makeElements(direction) {
 
@@ -95,7 +95,7 @@ var dateTool = new function () {
 			currDate.setDate(currDate.getDate() + numDateElements * direction);
 		}
 
-		var startDate = new Date(currDate.valueOf());
+		var startDate = new Date(currDate.valueOf().toString());
 		dateScrollCont.innerHTML = '';
 
 		for (var i = 0; i < numDateElements; i++) {

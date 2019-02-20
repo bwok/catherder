@@ -22,7 +22,7 @@ function init () {
 			args.dates.push({date: selectedDates[i], users: []});
 		}
 
-		sendAjaxRequest("create", JSON.stringify(args), function (response, error) {
+		sendAjaxRequest("create", JSON.stringify(args), function (error, response) {
 			if(error !== null){
 				errorArea.textContent = error;
 				errorArea.classList.remove("hidden");

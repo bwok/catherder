@@ -34,7 +34,7 @@ function init() {
 		var currentUrl = new URL(window.location.href);
 		var url = "adminsave?id=" + currentUrl.searchParams.get("id");
 
-		sendAjaxRequest(url, JSON.stringify(args), function (response, error) {
+		sendAjaxRequest(url, JSON.stringify(args), function (error, response) {
 			if(error !== null){
 				errorArea.textContent = error;
 				errorArea.classList.remove("hidden");
