@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+// TODO These all return date information for the server local time, not the users local time.
+
 // Given a unix timestamp in milliseconds, returns the first three letters of the month
 func getMonth(unixTime int64) string {
 	date := time.Unix(unixTime/1000, 0)
