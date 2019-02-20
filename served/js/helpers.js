@@ -1,3 +1,4 @@
+"use strict";
 function sendAjaxRequest(url, data, callback) {
 	// TODO missing a lot of missing bits here. Hello IE11 :/
 	var oReq = new XMLHttpRequest();

@@ -1,3 +1,4 @@
+"use strict";
 /**
  * A scrollbox with selectable dates. Scrollable within a specified date range.
  */

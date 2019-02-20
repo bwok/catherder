@@ -1,3 +1,4 @@
+"use strict";
 
 function init () {
 	var errorArea = document.getElementById('errorArea');
