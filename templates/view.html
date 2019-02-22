@@ -6,6 +6,7 @@
     <title>View your meet up</title>
     <link rel="stylesheet" href="/served/css/main.css">
     <link rel="stylesheet" href="/served/css/view.css">
+    <script type="application/ecmascript" src="/served/js/view.js"></script>
 </head>
 <body>
 
@@ -22,7 +23,7 @@
                 <div class="dummyBox"></div>{{with (index .Dates 0)}}{{range .Users}}<div class="row">{{.Name}}</div>{{end}}{{end}}
                 <div class="row"><input class="username" type="text" name="username" placeholder="New user..."></div>
             </div>
-            {{- range .Dates}}<div class="dateColumn"><div class="dateBox"><span>{{.Date | getMonth}}</span><span class="date">{{.Date | getDate}}</span><span>{{.Date | getWeekDay}}</span></div>{{range .Users}}<div class="row {{if eq .Available true}}rowAvailable{{else}}rowUnavailable{{end}}"><input type="checkbox" disabled {{if eq .Available true}}checked{{end}}></div>{{end}}<div class="row"><input type="checkbox" name="{{.Date}}"></div></div>{{end}}
+            {{- range .Dates}}<div class="dateColumn"><div class="dateBox"><span></span><span class="date"></span><span></span></div>{{range .Users}}<div class="row {{if eq .Available true}}rowAvailable{{else}}rowUnavailable{{end}}"><input type="checkbox" disabled {{if eq .Available true}}checked{{end}}></div>{{end}}<div class="row"><input type="checkbox" name="{{.Date}}"></div></div>{{end}}
         </div>
         <button class="saveButt" type="submit">Save</button>
 

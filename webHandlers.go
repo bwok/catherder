@@ -94,7 +94,7 @@ func ajaxCreateHandler(w http.ResponseWriter, r *http.Request) {
 func pageViewHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'self';")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; img-src 'self'; style-src 'self';")
 	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 
 	defer func() {
