@@ -76,7 +76,7 @@ var dateTool = new function () {
 	 * @param {number} direction -1 scrolls left, 1 scrolls right
 	 */
 	function scrollElements(direction) {
-		var startDate = new Date(currDate.valueOf().toString());
+		var startDate = new Date(currDate.valueOf());
 
 		if (direction === -1 && minDate < startDate) {
 			makeElements(-1);
@@ -95,7 +95,7 @@ var dateTool = new function () {
 			currDate.setDate(currDate.getDate() + numDateElements * direction);
 		}
 
-		var startDate = new Date(currDate.valueOf().toString());
+		var startDate = new Date(currDate.valueOf());
 		dateScrollCont.innerHTML = '';
 
 		for (var i = 0; i < numDateElements; i++) {
