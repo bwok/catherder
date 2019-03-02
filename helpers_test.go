@@ -2,6 +2,9 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -32,6 +35,20 @@ func TestValidateHash(t *testing.T) {
 
 func TestWriteJsonError(t *testing.T) {
 	// TODO test
+
+	w := httptest.NewRecorder()
+	writeJsonError(w, "abc")
+
+	response := w.Result()
+	body, _ := ioutil.ReadAll(response.Body)
+
+	if response.StatusCode != 200 {
+		t.Error("http status code was not 200")
+	}
+	if response.Header.Get("Content-Type") != "application/json" {
+		t.Error("Content-Type header was wrong")
+	}
+	fmt.Println(string(body))
 }
 
 func TestReadAndValidateJsonMeetUp(t *testing.T) {

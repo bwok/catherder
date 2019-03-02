@@ -49,13 +49,16 @@ func main() {
 	// Serve https traffic
 	httpsServeMux := http.NewServeMux()
 	httpsServeMux.Handle("/served/", http.StripPrefix("/served/", http.FileServer(http.Dir("./served/"))))
-	httpsServeMux.HandleFunc("/new.html", pageNewHandler)
-	httpsServeMux.HandleFunc("/create", ajaxCreateHandler)
+	httpsServeMux.HandleFunc("/edit.html", pageNewHandler)
 	httpsServeMux.HandleFunc("/view", pageViewHandler)
-	httpsServeMux.HandleFunc("/adduser/", addUserHandler)
-	httpsServeMux.HandleFunc("/admin", pageAdminHandler)
-	httpsServeMux.HandleFunc("/adminsave", ajaxAdminSaveHandler)
-	httpsServeMux.HandleFunc("/admindelete", ajaxAdminDeleteHandler)
+
+	// JSON handlers
+	httpsServeMux.HandleFunc("/api/updatemeetup", updateMeetUp)
+	httpsServeMux.HandleFunc("/api/getusermeetup", getUserMeetUp)
+	httpsServeMux.HandleFunc("/api/getadminmeetup", getAdminMeetUp)
+	httpsServeMux.HandleFunc("/api/deletemeetup", deleteMeetUp)
+	httpsServeMux.HandleFunc("/api/updateuser", updateUser)
+	httpsServeMux.HandleFunc("/api/deleteuser", deleteUser)
 
 	httpsServeMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")

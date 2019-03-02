@@ -32,8 +32,8 @@ type Admin struct {
 }
 type MeetUp struct {
 	Id          int64
-	UserHash    string
-	AdminHash   string
+	UserHash    string `json:"userhash"`
+	AdminHash   string `json:"adminhash"`
 	Dates       Dates  `json:"dates"`
 	Admin       Admin  `json:"admin"`
 	Description string `json:"description"`
@@ -408,6 +408,31 @@ func (u *Users) CreateUsers() error {
 	}
 
 	err = insTx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Updates all users in one transaction. Does not update the receiver.
+func (u *Users) UpdateUsers() error {
+	updateTx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Do Users Update
+	for _, user := range *u {
+		_, err := updateTx.Stmt(preparedStmts["updateUser"]).Exec(user.Name, user.Available, user.IdDate)
+		if err != nil {
+			if rollErr := updateTx.Rollback(); rollErr != nil {
+				return rollErr
+			}
+			return err
+		}
+	}
+
+	err = updateTx.Commit()
 	if err != nil {
 		return err
 	}

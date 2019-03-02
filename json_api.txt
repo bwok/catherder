@@ -1,0 +1,125 @@
+// ajax calls use the /api url
+
+
+// api/updatemeetup
+REQUEST:
+{
+    adminhash: string,              // hash. If set to null, a new meetup is created
+	description: string,
+	dates: [
+		{
+		    date: int,	            // signed 64 bit millisecond UNIX timestamp
+			users: [
+				{
+				    name: string,
+				    available: string
+				}, ....
+			]
+		}, ....
+	],
+	admin: {
+		email: string,
+		alerts: boolean
+	}
+}
+RESPONSE:
+{
+    result: {
+        userhash: string,           // hash
+        adminhash: string           // hash
+    },
+    error: string                   // empty string when no error
+}
+
+
+// api/getusermeetup
+REQUEST:
+{
+    userhash: string                // hash
+}
+RESPONSE:
+{
+	result: {
+	    description: string,
+        dates: [
+            {
+                date: int,	            // signed 64 bit millisecond UNIX timestamp
+                users: [
+                    {
+                        name: string,
+                        available: string
+                    }, ....
+                ]
+            }, ....
+        ]
+    },
+    error: string
+}
+
+
+// api/getadminmeetup
+REQUEST:
+{
+    adminhash: string               // hash
+}
+RESPONSE:
+{
+    result: {
+        description: string,
+        dates: [
+            {
+                date: int,          // signed 64 bit millisecond UNIX timestamp
+                users: [
+                    {
+                        name: string,
+                        available: string
+                    }, ....
+                ]
+            }, ....
+        ],
+            admin: {
+                email: string,
+                alerts: boolean
+            }
+    },
+    error: string
+}
+
+
+// api/deletemeetup
+REQUEST:
+{
+    adminhash: string               // hash
+}
+RESPONSE:
+{
+    result: string
+    error: string                   // empty string when no error
+}
+
+
+// api/updateuser
+REQUEST:
+{
+    userhash: string,               // hash
+    username: string,               // If the username already exists, the existing user gets updated, else the user gets created.
+    dates: [int, ....],	            // signed 64 bit millisecond UNIX timestamps
+}
+RESPONSE:
+{
+    result: string
+    error: string                   // empty string when no error
+}
+
+
+// api/deleteuser
+REQUEST:
+{
+    userhash: string,               // hash
+    username: string
+}
+RESPONSE:
+{
+    result: string
+    error: string                   // empty string when no error
+}

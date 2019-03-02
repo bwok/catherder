@@ -19,13 +19,13 @@ func TestPageNewHandler(t *testing.T) {
 	if response.StatusCode != 200 {
 		t.Error("http status code was not 200")
 	}
-	if response.Header.Get("Content-Type") != "text/html; charset=utf-8"{
+	if response.Header.Get("Content-Type") != "text/html; charset=utf-8" {
 		t.Error("Content-Type header was wrong")
 	}
-	if response.Header.Get("Strict-Transport-Security") != "max-age=31536000; includeSubDomains"{
+	if response.Header.Get("Strict-Transport-Security") != "max-age=31536000; includeSubDomains" {
 		t.Error("Strict-Transport-Security header was wrong")
 	}
-	if response.Header.Get("Content-Security-Policy") != "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';"{
+	if response.Header.Get("Content-Security-Policy") != "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';" {
 		t.Error("Content-Security-Policy header was wrong")
 	}
 

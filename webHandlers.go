@@ -5,304 +5,117 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
 )
 
-// Web server handlers
 
 // Handles requests to new.html
 func pageNewHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';")
-	http.ServeFile(w, r, "templates/new.html")
+	http.ServeFile(w, r, "templates/edit.html")
 }
 
-// Handles the ajax request to create a new meetup
-func ajaxCreateHandler(w http.ResponseWriter, r *http.Request) {
+// Creates the page for https://host/view?id=userhash
+func pageViewHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';")
+	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+	http.ServeFile(w, r, "templates/view.html")
+}
+
+// Handles the json request to update a new meetup. If no adminhash is present, then a new meetup gets created.
+func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	defer func() {
 		if closeErr := r.Body.Close(); closeErr != nil {
-			log.Printf("ajaxCreateHandler failed: %s\n", closeErr)
+			log.Printf("updateMeetUp failed: %s\n", closeErr)
 		}
 	}()
 
 	var newMeetUp MeetUp
 
-	if err = readAndValidateJsonMeetUp(r, &newMeetUp); err != nil {
+	if err = readAndValidateJsonMeetUp(r, &newMeetUp); err != nil { // Dates and email address validated here
 		writeJsonError(w, err.Error())
 		return
 	}
 
 	for i := 0; i < len(newMeetUp.Dates); i++ {
-		if len(newMeetUp.Dates[i].Users) > 0 { // No users allowed when creating
+		if len(newMeetUp.Dates[i].Users) > 0 { // No users allowed when creating or updating
 			writeJsonError(w, "invalid user object.")
 			return
 		}
 	}
 
-	// Generate the user hash
-	randBytes := make([]byte, 64)
-	if _, err := rand.Read(randBytes); err != nil {
-		log.Printf("ajaxCreateHandler failed: error reading random bytes for user hash. %s\n", err)
-		writeJsonError(w, "Error reading random bytes.")
-	}
-	newMeetUp.UserHash = fmt.Sprintf("%x", sha256.Sum256(randBytes))
-
-	// Generate the admin hash
-	randBytes = make([]byte, 64)
-	if _, err := rand.Read(randBytes); err != nil {
-		log.Printf("ajaxCreateHandler failed: error reading random bytes for admin hash. %s\n", err)
-		writeJsonError(w, "Error reading random bytes.")
-	}
-	newMeetUp.AdminHash = fmt.Sprintf("%x", sha256.Sum256(randBytes))
-
-	// Create the new meetup rows in the database.
-	err = newMeetUp.CreateMeetUp()
-	if err != nil {
-		log.Printf("ajaxCreateHandler: err creating database rows: %s\n", err)
-		writeJsonError(w, "Error creating new meetup.")
-	} else {
-		type CreateResponseResult struct {
-			UserLink  string `json:"userlink"`
-			AdminLink string `json:"adminlink"`
+	if newMeetUp.AdminHash == "" { // If no adminhash, a new meetup is being created, therefore generate both the hashes.
+		// Generate the user hash
+		randBytes := make([]byte, 64)
+		if _, err := rand.Read(randBytes); err != nil {
+			log.Printf("updateMeetUp failed: error reading random bytes for user hash. %s\n", err)
+			writeJsonError(w, "Error reading random bytes.")
 		}
-		type CreateResponse struct {
-			Result CreateResponseResult `json:"result"`
-			Error  string               `json:"error"`
+		newMeetUp.UserHash = fmt.Sprintf("%x", sha256.Sum256(randBytes))
+
+		// Generate the admin hash
+		randBytes = make([]byte, 64)
+		if _, err := rand.Read(randBytes); err != nil {
+			log.Printf("updateMeetUp failed: error reading random bytes for admin hash. %s\n", err)
+			writeJsonError(w, "Error reading random bytes.")
 		}
+		newMeetUp.AdminHash = fmt.Sprintf("%x", sha256.Sum256(randBytes))
 
-		successResponse := CreateResponse{Result: CreateResponseResult{UserLink: newMeetUp.UserHash, AdminLink: newMeetUp.AdminHash}, Error: ""}
-
-		js, err := json.Marshal(successResponse)
+		err = newMeetUp.CreateMeetUp()
 		if err != nil {
-			writeJsonError(w, err.Error())
+			log.Printf("ajaxCreateHandler: err creating database rows: %s\n", err)
+			writeJsonError(w, "Error creating new meetup.")
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		_, err = w.Write(js)
-		if err != nil {
-			log.Printf("ajaxCreateHandler, error writing response. %s\n", err)
-		}
-	}
-}
-
-// Creates the page for https://host/view?id=userhash
-func pageViewHandler(w http.ResponseWriter, r *http.Request) {
-	var err error
-
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; img-src 'self'; style-src 'self';")
-	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-
-	defer func() {
-		if closeErr := r.Body.Close(); closeErr != nil {
-			log.Println(closeErr)
-		}
-	}()
-
-	userHash := r.FormValue("id")
-	meetUpObj := MeetUp{}
-
-	// Check the userhash is valid
-	if err = validateHash(userHash); err != nil {
-		http.Error(w, "Invalid URL", http.StatusInternalServerError)
-		return
-	}
-
-	if err = meetUpObj.GetByUserHash(userHash); err != nil {
-		if err.Error() == "no rows matching the userhash" { // No rows found for this hash, send the user to the start page.
-			w.Header().Set("Location", "/")
-			w.WriteHeader(http.StatusFound)
-		} else {
-			log.Printf("pageViewHandler: err getting by userhash: %s\n", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-
-	var viewTemplate = template.Must(template.New("view.html").
-		Funcs(template.FuncMap{"getMonth": getMonth, "getDate": getDate, "getWeekDay": getWeekDay}).
-		ParseFiles("templates/view.html"))
-
-	type viewObject struct {
-		Host string
-		MeetUp
-	}
-
-	view := viewObject{Host: r.Host, MeetUp: meetUpObj}
-
-	if err = viewTemplate.Execute(w, view); err != nil {
-		log.Printf("executing template failed: %s\n", err)
-	}
-}
-
-// Called when adding a new user
-func addUserHandler(w http.ResponseWriter, r *http.Request) {
-	var err error
-
-	defer func() {
-		if closeErr := r.Body.Close(); closeErr != nil {
-			log.Println(closeErr)
-		}
-	}()
-
-	if err := r.ParseForm(); err != nil {
-		log.Print(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	userName := r.FormValue("username")
-	if len(userName) == 0 {
-		log.Println("Username either absent or with length 0 in /adduser request.")
-		http.Error(w, "Invalid username.", http.StatusBadRequest)
-		return
-	}
-
-	userHash := r.FormValue("userhash")
-	if len(userHash) == 0 {
-		log.Println("userHash either absent or with length 0 in /adduser request.")
-		http.Error(w, "Invalid url.", http.StatusBadRequest)
-		return
-	}
-
-	meetUpObj := MeetUp{}
-
-	if err = meetUpObj.GetByUserHash(userHash); err != nil {
-		if err.Error() == "no rows" { // No rows found for this hash, send the user to the start page.
-			w.Header().Set("Location", "/")
-			w.WriteHeader(http.StatusFound)
-		} else {
-			log.Printf("addUserHandler: err getting by userhash: %s\n", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-
-	// Go through database dates, try and get each date from the form, add user to each date, if date present in form will be "<timestamp>":"on" in form
-	users := Users{}
-	for index, dateObj := range meetUpObj.Dates {
-		user := User{IdDate: meetUpObj.Dates[index].Id, Name: userName}
-
-		if len(r.FormValue(strconv.FormatInt(dateObj.Date, 10))) == 0 { // Not present, add user as unavailable
-			user.Available = false
-		} else {
-			user.Available = true
+	} else {
+		// Check the adminhash is valid
+		if err = validateHash(newMeetUp.AdminHash); err != nil {
+			log.Printf("updateMeetUp failed: invalid admin hash. hash:%q, error:%s\n", newMeetUp.AdminHash, err)
+			writeJsonError(w, "invalid admin hash.")
+			return
 		}
 
-		users = append(users, user)
-	}
+		var currMeetUp MeetUp
 
-	if err = users.CreateUsers(); err != nil {
-		log.Printf("addUserHandler: error creating users: %s\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Location", "/view?id="+userHash)
-	w.WriteHeader(http.StatusFound)
-}
-
-// Handles requests to admin.html
-func pageAdminHandler(w http.ResponseWriter, r *http.Request) {
-	var err error
-	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';")
-
-	defer func() {
-		if closeErr := r.Body.Close(); closeErr != nil {
-			log.Println(closeErr)
+		//Get MeetUp object by adminhash
+		if err = currMeetUp.GetByAdminHash(newMeetUp.AdminHash); err != nil {
+			if err.Error() == "no rows matching the adminhash" { // No rows found for this hash, send the user to the start page.
+				log.Printf("updateMeetUp failed: hash:%q, error:%s\n", newMeetUp.AdminHash, err)
+				writeJsonError(w, "admin hash not found.")
+			} else {
+				log.Printf("updateMeetUp failed: MeetUp.GetByAdminHash() hash:%q, error:%s\n", newMeetUp.AdminHash, err)
+				writeJsonError(w, "database error.")
+			}
+			return
 		}
-	}()
 
-	if err := r.ParseForm(); err != nil {
-		log.Printf("pageAdminHandler: error parsing form %s.\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	adminHash := r.FormValue("id")
-	meetUpObj := MeetUp{}
-
-	// Check the adminhash is valid
-	if err = validateHash(adminHash); err != nil {
-		http.Error(w, "Invalid URL", http.StatusInternalServerError)
-		return
-	}
-
-	if err = meetUpObj.GetByAdminHash(adminHash); err != nil {
-		if err.Error() == "no rows matching the adminhash" { // No rows found for this hash, send the user to the start page.
-			w.Header().Set("Location", "/")
-			w.WriteHeader(http.StatusFound)
-		} else {
-			log.Printf("pageAdminHandler: err getting by adminhash: %s\n", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		// Update the database.
+		if err = currMeetUp.UpdateMeetUpDeleteDates(&newMeetUp); err != nil {
+			log.Printf("updateMeetUp failed: MeetUp.UpdateMeetUpDeleteDates() hash:%q, error:%s\n", newMeetUp.AdminHash, err)
+			writeJsonError(w, "database error. could not update.")
+			return
 		}
-		return
+
+		newMeetUp.UserHash = currMeetUp.UserHash // hash missing in newMeetUp
 	}
 
-	var adminTemplate = template.Must(template.New("admin.html").
-		Funcs(template.FuncMap{"getMonth": getMonth, "getDate": getDate, "getWeekDay": getWeekDay}).
-		ParseFiles("templates/admin.html"))
-
-	if err = adminTemplate.Execute(w, meetUpObj); err != nil {
-		log.Printf("executing template failed: %s\n", err)
+	// Create and write json response to the client
+	type CreateResponseResult struct {
+		UserLink  string `json:"userlink"`
+		AdminLink string `json:"adminlink"`
 	}
-}
-
-// Updates an edited MeetUp.
-func ajaxAdminSaveHandler(w http.ResponseWriter, r *http.Request) {
-	var err error
-
-	defer func() {
-		if closeErr := r.Body.Close(); closeErr != nil {
-			log.Printf("ajaxAdminSaveHandler failed: %s\n", closeErr)
-		}
-	}()
-
-	adminHash := r.FormValue("id")
-	var newMeetUp MeetUp
-	var currMeetUp MeetUp
-
-	if err = readAndValidateJsonMeetUp(r, &newMeetUp); err != nil {
-		writeJsonError(w, err.Error())
-		return
+	type CreateResponse struct {
+		Result CreateResponseResult `json:"result"`
+		Error  string               `json:"error"`
 	}
 
-	// Check the adminhash is valid
-	if err = validateHash(adminHash); err != nil {
-		http.Error(w, "Invalid URL", http.StatusInternalServerError)
-		return
-	}
-
-	//Get MeetUp object by adminhash
-	if err = currMeetUp.GetByAdminHash(adminHash); err != nil {
-		if err.Error() == "no rows matching the adminhash" { // No rows found for this hash, send the user to the start page.
-			w.Header().Set("Location", "/")
-			w.WriteHeader(http.StatusFound)
-		} else {
-			log.Printf("ajaxAdminSaveHandler: err getting by adminhash: %s\n", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-
-	// Update the database.
-	if err = currMeetUp.UpdateMeetUpDeleteDates(&newMeetUp); err != nil {
-		log.Printf("ajaxAdminSaveHandler: err updating MeetUp: %s\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	type Response struct {
-		Result string `json:"result"`
-		Error  string `json:"error"`
-	}
-
-	successResponse := Response{Result: currMeetUp.UserHash, Error: ""}
+	successResponse := CreateResponse{Result: CreateResponseResult{UserLink: newMeetUp.UserHash, AdminLink: newMeetUp.AdminHash}, Error: ""}
 
 	js, err := json.Marshal(successResponse)
 	if err != nil {
@@ -312,47 +125,345 @@ func ajaxAdminSaveHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if _, err = w.Write(js); err != nil {
-		log.Printf("ajaxAdminSaveHandler, error writing response. %s\n", err)
+		log.Printf("updateMeetUp failed: error writing response. %s\n", err)
 	}
 }
 
-// Deletes a MeetUp.
-func ajaxAdminDeleteHandler(w http.ResponseWriter, r *http.Request) {
+// Handles the json request to get meetup info with a user hash.
+func getUserMeetUp(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	defer func() {
 		if closeErr := r.Body.Close(); closeErr != nil {
-			log.Printf("ajaxAdminDeleteHandler failed: %s\n", closeErr)
+			log.Println(closeErr)
 		}
 	}()
 
-	var dbMeetUp MeetUp
-	adminHash := r.FormValue("id")
+	type reqStruct struct {
+		UserHash string `json:"userhash"`
+	}
+	var reqJson reqStruct
+
+	// Decode the json
+	if err = json.NewDecoder(io.LimitReader(r.Body, 512)).Decode(reqJson); err != nil { // 512B max json length
+		log.Printf("getUserMeetUp invalid json: %s\n", err)
+		writeJsonError(w, "invalid json.")
+	}
+
+	// Check the userhash is valid
+	if err = validateHash(reqJson.UserHash); err != nil {
+		log.Printf("getUserMeetUp invalid user hash: %s\n", err)
+		writeJsonError(w, "invalid hash.")
+		return
+	}
+
+	meetUpObj := MeetUp{}
+
+	if err = meetUpObj.GetByUserHash(reqJson.UserHash); err != nil {
+		if err.Error() == "no rows matching the userhash" {
+			writeJsonError(w, "user hash not found.")
+		} else {
+			log.Printf("getUserMeetUp: err getting by userhash: %s\n", err)
+			writeJsonError(w, "database error.")
+		}
+		return
+	}
+
+	// Create and write json response to the client
+	type CreateResponseResult struct {
+		Dates       Dates  `json:"dates"`
+		Description string `json:"description"`
+	}
+	type CreateResponse struct {
+		Result CreateResponseResult `json:"result"`
+		Error  string               `json:"error"`
+	}
+
+	successResponse := CreateResponse{Result: CreateResponseResult{Dates: meetUpObj.Dates, Description: meetUpObj.Description}, Error: ""}
+
+	js, err := json.Marshal(successResponse)
+	if err != nil {
+		writeJsonError(w, err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	if _, err = w.Write(js); err != nil {
+		log.Printf("getUserMeetUp failed: error writing response. %s\n", err)
+	}
+}
+
+// Handles the json request to get meetup info with an admin hash.
+func getAdminMeetUp(w http.ResponseWriter, r *http.Request) {
+	var err error
+
+	defer func() {
+		if closeErr := r.Body.Close(); closeErr != nil {
+			log.Println(closeErr)
+		}
+	}()
+
+	type reqStruct struct {
+		AdminHash string `json:"adminhash"`
+	}
+	var reqJson reqStruct
+
+	// Decode the json
+	if err = json.NewDecoder(io.LimitReader(r.Body, 512)).Decode(reqJson); err != nil { // 512B max json length
+		log.Printf("getAdminMeetUp invalid json: %s\n", err)
+		writeJsonError(w, "invalid json.")
+	}
+
+	// Check the adminhash is valid
+	if err = validateHash(reqJson.AdminHash); err != nil {
+		log.Printf("getAdminMeetUp invalid admin hash: %s\n", err)
+		writeJsonError(w, "invalid hash.")
+		return
+	}
+
+	meetUpObj := MeetUp{}
+
+	if err = meetUpObj.GetByAdminHash(reqJson.AdminHash); err != nil {
+		if err.Error() == "no rows matching the adminhash" {
+			writeJsonError(w, "admin hash not found.")
+		} else {
+			log.Printf("getAdminMeetUp: err getting by adminhash: %s\n", err)
+			writeJsonError(w, "database error.")
+		}
+		return
+	}
+
+	// Create and write json response to the client
+	type CreateResponse struct {
+		Result MeetUp `json:"result"`
+		Error  string `json:"error"`
+	}
+
+	successResponse := CreateResponse{Result: meetUpObj, Error: ""}
+
+	js, err := json.Marshal(successResponse)
+	if err != nil {
+		writeJsonError(w, err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	if _, err = w.Write(js); err != nil {
+		log.Printf("getAdminMeetUp failed: error writing response. %s\n", err)
+	}
+}
+
+// Handles the json request to get meetup info with an admin hash.
+func deleteMeetUp(w http.ResponseWriter, r *http.Request) {
+	var err error
+
+	defer func() {
+		if closeErr := r.Body.Close(); closeErr != nil {
+			log.Println(closeErr)
+		}
+	}()
+
+	type reqStruct struct {
+		AdminHash string `json:"adminhash"`
+	}
+	var reqJson reqStruct
+
+	// Decode the json
+	if err = json.NewDecoder(io.LimitReader(r.Body, 512)).Decode(reqJson); err != nil { // 512B max json length
+		log.Printf("deleteMeetUp failed: invalid json: %s\n", err)
+		writeJsonError(w, "invalid json.")
+	}
+
+	// Check the adminhash is valid
+	if err = validateHash(reqJson.AdminHash); err != nil {
+		log.Printf("deleteMeetUp failed: invalid admin hash: %s\n", err)
+		writeJsonError(w, "invalid hash.")
+		return
+	}
 
 	// Delete MeetUp object by adminhash
-	if err = dbMeetUp.DeleteByAdminHash(adminHash); err != nil {
-		log.Printf("ajaxAdminDeleteHandler: err deleting MeetUp: %s\n", err)
+	var dbMeetUp MeetUp
+	if err = dbMeetUp.DeleteByAdminHash(reqJson.AdminHash); err != nil {
+		log.Printf("deleteMeetUp failed: err deleting MeetUp: %s\n", err)
 		writeJsonError(w, "error deleting meetup")
 		return
 	}
 
-	type Response struct {
-		Result string `json:"result"`
-		Error  string `json:"error"`
+	w.Header().Set("Content-Type", "application/json")
+	js := []byte(`{"result"":"", "error"":""}`)
+
+	if _, err = w.Write(js); err != nil {
+		log.Printf("deleteMeetUp failed: error writing response. %s\n", err)
+	}
+}
+
+// Handles the json request to update a user. If the user is not present then they get added.
+func updateUser(w http.ResponseWriter, r *http.Request) {
+	var err error
+
+	defer func() {
+		if closeErr := r.Body.Close(); closeErr != nil {
+			log.Println(closeErr)
+		}
+	}()
+
+	type reqStruct struct {
+		UserHash string  `json:"userhash"`
+		UserName string  `json:"username"`
+		Dates    []int64 `json:"dates"`
+	}
+	var reqJson reqStruct
+
+	// Decode the json
+	if err = json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(reqJson); err != nil { // 4KB max json length
+		log.Printf("updateUser failed: invalid json: %s\n", err)
+		writeJsonError(w, "invalid json.")
 	}
 
-	successResponse := Response{Result: "", Error: ""}
-
-	js, err := json.Marshal(successResponse)
-	if err != nil {
-		writeJsonError(w, err.Error())
+	// Check the userhash is valid
+	if err = validateHash(reqJson.UserHash); err != nil {
+		log.Printf("updateUser failed: invalid user hash: %s\n", err)
+		writeJsonError(w, "invalid hash.")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	meetUpObj := MeetUp{}
 
-	if _, err = w.Write(js); err != nil {
-		log.Printf("ajaxAdminDeleteHandler, error writing response. %s\n", err)
+	if err = meetUpObj.GetByUserHash(reqJson.UserHash); err != nil {
+		if err.Error() == "no rows matching the userhash" {
+			writeJsonError(w, "user hash not found.")
+		} else {
+			log.Printf("updateUser: err getting by userhash: %s\n", err)
+			writeJsonError(w, "database error.")
+		}
+		return
 	}
 
+	// Check if the user name is already in the database. All users are in each Date.Users slice, so only check the first one.
+	var userPresent = false
+	if len(meetUpObj.Dates) > 0 && len(meetUpObj.Dates[0].Users) > 0 {
+		for _, userObj := range meetUpObj.Dates[0].Users {
+			if userObj.Name == reqJson.UserName {
+				userPresent = true
+				break
+			}
+		}
+	}
+
+	if userPresent == true {
+		users := Users{}
+
+		for index, dateObj := range meetUpObj.Dates { // loop over dates
+			for _, reqDate := range reqJson.Dates { // Get matching date to update. Only dates the user is available for are included in the query
+				user := User{IdDate: meetUpObj.Dates[index].Id, Name: reqJson.UserName, Available: false}
+				if reqDate == dateObj.Date {
+					user.Available = true
+				}
+				users = append(users, user)
+			}
+		}
+
+		if err = users.UpdateUsers(); err != nil {
+			log.Printf("updateUser: error updating users: %s\n", err)
+			writeJsonError(w, "database error updating user.")
+			return
+		}
+
+	} else {
+		// Go through database dates, try and get each date from the form, add user to each date, if date present in form will be "<timestamp>":"on" in form
+		users := Users{}
+		for index, dateObj := range meetUpObj.Dates {
+			user := User{IdDate: meetUpObj.Dates[index].Id, Name: reqJson.UserName, Available: true}
+
+			if len(r.FormValue(strconv.FormatInt(dateObj.Date, 10))) == 0 { // Not present, add user as unavailable
+				user.Available = false
+			}
+
+			users = append(users, user)
+		}
+
+		if err = users.CreateUsers(); err != nil {
+			log.Printf("updateUser: error creating users: %s\n", err)
+			writeJsonError(w, "database error creating user.")
+			return
+		}
+	}
+
+	// Finished with the database return json
+	w.Header().Set("Content-Type", "application/json")
+	js := []byte(`{"result"":"", "error"":""}`)
+
+	if _, err = w.Write(js); err != nil {
+		log.Printf("updateUser, error writing response. %s\n", err)
+	}
+}
+
+// Handles the json request to delete a user.
+func deleteUser(w http.ResponseWriter, r *http.Request) {
+	var err error
+
+	defer func() {
+		if closeErr := r.Body.Close(); closeErr != nil {
+			log.Println(closeErr)
+		}
+	}()
+
+	type reqStruct struct {
+		UserHash string `json:"userhash"`
+		UserName string `json:"username"`
+	}
+	var reqJson reqStruct
+
+	// Decode the json
+	if err = json.NewDecoder(io.LimitReader(r.Body, 512)).Decode(reqJson); err != nil { // 512B max json length
+		log.Printf("deleteUser failed: invalid json: %s\n", err)
+		writeJsonError(w, "invalid json.")
+	}
+
+	// Check the userhash is valid
+	if err = validateHash(reqJson.UserHash); err != nil {
+		log.Printf("deleteUser failed: invalid user hash: %s\n", err)
+		writeJsonError(w, "invalid hash.")
+		return
+	}
+
+	meetUpObj := MeetUp{}
+
+	if err = meetUpObj.GetByUserHash(reqJson.UserHash); err != nil {
+		if err.Error() == "no rows matching the userhash" {
+			writeJsonError(w, "user hash not found.")
+		} else {
+			log.Printf("deleteUser: err getting by userhash: %s\n", err)
+			writeJsonError(w, "database error.")
+		}
+		return
+	}
+
+	// Get the user id. All users are in each Date.Users slice, so only check the first one.
+	var userId int64 = -1
+	if len(meetUpObj.Dates) > 0 && len(meetUpObj.Dates[0].Users) > 0 {
+		for _, userObj := range meetUpObj.Dates[0].Users {
+			if userObj.Name == reqJson.UserName {
+				userId = userObj.Id
+				break
+			}
+		}
+	}
+
+	if userId >= 0 {
+		user := User{Id: userId}
+		if err := user.Delete(); err != nil {
+			log.Printf("deleteUser: err deleting user: %s\n", err)
+			writeJsonError(w, "database error.")
+			return
+		}
+	}
+
+	// Finished with the database return json
+	w.Header().Set("Content-Type", "application/json")
+	js := []byte(`{"result"":"", "error"":""}`)
+
+	if _, err = w.Write(js); err != nil {
+		log.Printf("updateUser, error writing response. %s\n", err)
+	}
 }
