@@ -11,7 +11,7 @@ import (
 MeetUp CRUD
 */
 func (m *MeetUp) Create() error {
-	result, err := preparedStmts["insertMeetup"].Exec(m.UserHash, m.AdminHash, m.Description)
+	result, err := preparedStmts["insertMeetup"].Exec(m.UserHash, m.AdminHash, m.AdminEmail, m.SendAlerts, m.Dates, m.Description)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (m *MeetUp) Read(id int64) (retErr error) {
 	}()
 
 	if rows.Next() {
-		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.Description)
+		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, &m.Dates, &m.Description)
 		if retErr != nil {
 			return
 		}
@@ -47,7 +47,7 @@ func (m *MeetUp) Read(id int64) (retErr error) {
 	return nil
 }
 func (m *MeetUp) Update() error {
-	_, err := preparedStmts["updateMeetup"].Exec(m.Description, m.Id)
+	_, err := preparedStmts["updateMeetup"].Exec(m.AdminEmail, m.SendAlerts, m.Dates, m.Description, m.Id)
 	if err != nil {
 		return err
 	}
@@ -63,126 +63,10 @@ func (m *MeetUp) Delete() error {
 }
 
 /*
-Admin CRUD
-*/
-func (a *Admin) Create() error {
-	result, err := preparedStmts["insertAdmin"].Exec(a.IdMeetUp, a.Email, a.Alerts)
-	if err != nil {
-		return err
-	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	a.Id = id
-	return nil
-}
-func (a *Admin) Read(id int64) (retErr error) {
-	rows, retErr := preparedStmts["selectAdmin"].Query(id)
-	if retErr != nil {
-		return
-	}
-	defer func() {
-		if closeErr := rows.Close(); closeErr != nil {
-			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
-		}
-	}()
-
-	if rows.Next() {
-		retErr = rows.Scan(&a.Id, &a.IdMeetUp, &a.Email, &a.Alerts)
-		if retErr != nil {
-			return
-		}
-	} else {
-		retErr = errors.New("no rows")
-		return
-	}
-
-	return nil
-}
-func (a *Admin) Update() error {
-	_, err := preparedStmts["updateAdmin"].Exec(a.Email, a.Alerts, a.Id)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-func (a *Admin) Delete() error {
-	_, err := preparedStmts["deleteAdmin"].Exec(a.Id)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-/*
-Date CRUD
-*/
-
-func (d *Date) Create() error {
-	result, err := preparedStmts["insertDate"].Exec(d.IdMeetUp, d.Date)
-	if err != nil {
-		return err
-	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	d.Id = id
-
-	return nil
-}
-func (d *Date) Read(id int64) (retErr error) {
-	rows, retErr := preparedStmts["selectDate"].Query(id)
-	if retErr != nil {
-		return
-	}
-	defer func() {
-		if closeErr := rows.Close(); closeErr != nil {
-			retErr = fmt.Errorf("%s unable to close rows %s", retErr, closeErr)
-		}
-	}()
-
-	if rows.Next() {
-		retErr = rows.Scan(&d.Id, &d.IdMeetUp, &d.Date)
-		if retErr != nil {
-			return
-		}
-	} else {
-		retErr = errors.New("no rows")
-		return
-	}
-
-	return nil
-}
-func (d *Date) Update() error {
-	_, err := preparedStmts["updateDate"].Exec(d.Date, d.Id)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-func (d *Date) Delete() error {
-	_, err := preparedStmts["deleteDate"].Exec(d.Id)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-/*
 User CRUD
 */
 func (u *User) Create() error {
-	result, err := preparedStmts["insertUser"].Exec(u.IdDate, u.Name, u.Available)
+	result, err := preparedStmts["insertUser"].Exec(u.IdMeetUp, u.Name, u.Dates)
 	if err != nil {
 		return err
 	}
@@ -207,7 +91,7 @@ func (u *User) Read(id int64) (retErr error) {
 	}()
 
 	if rows.Next() {
-		retErr = rows.Scan(&u.Id, &u.IdDate, &u.Name, &u.Available)
+		retErr = rows.Scan(&u.Id, &u.IdMeetUp, &u.Name, &u.Dates)
 		if retErr != nil {
 			return
 		}
@@ -219,7 +103,7 @@ func (u *User) Read(id int64) (retErr error) {
 	return nil
 }
 func (u *User) Update() error {
-	_, err := preparedStmts["updateUser"].Exec(u.Name, u.Available, u.Id)
+	_, err := preparedStmts["updateUser"].Exec(u.Name, u.Dates, u.Id)
 	if err != nil {
 		return err
 	}

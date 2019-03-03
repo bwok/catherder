@@ -10,17 +10,12 @@ function init () {
 
 		var args = {
 			description: document.getElementById("description").value,
-			dates: [],
-			admin: {
-				email: document.getElementById("adminEmail").value,
-				alerts: document.getElementById("notifications").checked
-			}
-		};
+			dates: dateTool.getDates(),
+			users: [],
+			adminemail: document.getElementById("adminEmail").value,
+			sendalerts: document.getElementById("notifications").checked
 
-		var selectedDates = dateTool.getDates();
-		for (var i = 0; i < selectedDates.length; i++) {
-			args.dates.push({date: selectedDates[i], users: []});
-		}
+		};
 
 		sendAjaxRequest("/api/updatemeetup", JSON.stringify(args), function (error, response) {
 			if(error !== null){

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"io"
@@ -60,19 +61,44 @@ func readAndValidateJsonMeetUp(r *http.Request, meetUp *MeetUp) error {
 	}
 
 	// Validate email address
-	if _, err = mail.ParseAddress(meetUp.Admin.Email); err != nil {
+	if _, err = mail.ParseAddress(meetUp.AdminEmail); err != nil {
 		return errors.New("invalid email address")
 	}
 
 	// Validate dates
-	if meetUp.Dates == nil || len(meetUp.Dates) == 0 {
+	if len(meetUp.Dates) == 0 {
 		return errors.New("no dates selected")
 	} else {
-		for i := 0; i < len(meetUp.Dates); i++ {
-			if meetUp.Dates[i].Date <= 0 {
+		for _, date := range meetUp.Dates {
+			if date <= 0 {
 				return errors.New("invalid date")
 			}
 		}
 	}
 	return nil
+}
+
+// convert dates []int64 to a []byte (sqlite blob type).
+func convertDatesToBlob(intSlice []int64) []byte {
+	var blobBytes []byte
+
+	for _, date := range intSlice {
+		buf := make([]byte, binary.MaxVarintLen64)
+		binary.PutVarint(buf, date)
+		blobBytes = append(blobBytes, buf...)
+	}
+
+	return blobBytes
+}
+
+// convert blob []byte to date []int64
+func convertBlobToDates(blobBytes []byte) []int64 {
+	var intSlice []int64
+
+	for i := 0; i < len(blobBytes); i += binary.MaxVarintLen64 {
+		outInt, _ := binary.Varint(blobBytes[i:i+binary.MaxVarintLen64])
+		intSlice = append(intSlice, outInt)
+	}
+
+	return intSlice
 }

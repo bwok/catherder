@@ -6,21 +6,15 @@ REQUEST:
 {
     adminhash: string,              // hash. If set to null, a new meetup is created
 	description: string,
-	dates: [
-		{
-		    date: int,	            // signed 64 bit millisecond UNIX timestamp. Minimum value = 0.
-			users: [
-				{
-				    name: string,
-				    available: bool
-				}, ....
-			]
-		}, ....
-	],
-	admin: {
-		email: string,
-		alerts: boolean
-	}
+	dates: [ int, ... ],	            // signed 64 bit millisecond UNIX timestamp. Minimum value = 0.
+	users: [
+        {
+            name: string,
+            dates: [ int, ... ]     // dates the user is available for. Signed 64 bit millisecond UNIX timestamp
+        }, ....
+    ],
+    adminemail: string,
+    sendalerts: boolean
 }
 RESPONSE:
 {
@@ -41,15 +35,11 @@ RESPONSE:
 {
 	result: {
 	    description: string,
-        dates: [
+        dates: [ int, ... ],	            // signed 64 bit millisecond UNIX timestamp. Minimum value = 0.
+        users: [
             {
-                date: int,	            // signed 64 bit millisecond UNIX timestamp
-                users: [
-                    {
-                        name: string,
-                        available: string
-                    }, ....
-                ]
+                name: string,
+                dates: [ int, ... ]     // dates the user is available for. Signed 64 bit millisecond UNIX timestamp
             }, ....
         ]
     },
@@ -66,21 +56,15 @@ RESPONSE:
 {
     result: {
         description: string,
-        dates: [
+        dates: [ int, ... ],	            // signed 64 bit millisecond UNIX timestamp. Minimum value = 0.
+        users: [
             {
-                date: int,          // signed 64 bit millisecond UNIX timestamp
-                users: [
-                    {
-                        name: string,
-                        available: string
-                    }, ....
-                ]
+                name: string,
+                dates: [ int, ... ]     // dates the user is available for. Signed 64 bit millisecond UNIX timestamp
             }, ....
         ],
-            admin: {
-                email: string,
-                alerts: boolean
-            }
+         adminemail: string,
+         sendalerts: boolean
     },
     error: string
 }

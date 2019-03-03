@@ -2,6 +2,30 @@
 
 
 function init() {
+	var params = new URLSearchParams(window.location.search.substring(1));
+	var userhash = params.get("id");
+
+	if(userhash === null){
+		console.log("error: no userhash found in url string.");
+		return;
+	}
+
+	sendAjaxRequest("/api/getusermeetup", JSON.stringify({userhash: userhash}), function (error, response) {
+		if(error !== null){
+			errorArea.textContent = error;
+			errorArea.classList.remove("hidden");
+		}
+		else if(response.error !== ""){
+			errorArea.textContent = response.error;
+			errorArea.classList.remove("hidden");
+		} else {
+			console.log(response)
+		}
+	});
+
+	
+
+	/*
 	var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 	var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 	var dateColumns = document.querySelectorAll(".dateColumn");
@@ -20,6 +44,9 @@ function init() {
 			}
 		}
 	}
+	*/
+
+
 }
 
 

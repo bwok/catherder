@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 // Handles requests to new.html
@@ -43,7 +42,7 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for i := 0; i < len(newMeetUp.Dates); i++ {
-		if len(newMeetUp.Dates[i].Users) > 0 { // No users allowed when creating or updating
+		if len(newMeetUp.Users) > 0 { // No users allowed when creating or updating
 			writeJsonError(w, "invalid user object.")
 			return
 		}
@@ -95,13 +94,18 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Update the database.
-		if err = currMeetUp.UpdateMeetUpDeleteDates(&newMeetUp); err != nil {
-			log.Printf("updateMeetUp failed: MeetUp.UpdateMeetUpDeleteDates() hash:%q, error:%s\n", newMeetUp.AdminHash, err)
+		currMeetUp.AdminEmail = newMeetUp.AdminEmail
+		currMeetUp.SendAlerts = newMeetUp.SendAlerts
+		currMeetUp.Dates = newMeetUp.Dates
+		currMeetUp.Description = newMeetUp.Description
+
+		if err = currMeetUp.Update(); err != nil {
+			log.Printf("updateMeetUp failed: MeetUp.Update() hash:%q, error:%s\n", newMeetUp.AdminHash, err)
 			writeJsonError(w, "database error. could not update.")
 			return
 		}
 
-		newMeetUp.UserHash = currMeetUp.UserHash // hash missing in newMeetUp
+		newMeetUp = currMeetUp
 	}
 
 	// Create and write json response to the client
@@ -171,7 +175,8 @@ func getUserMeetUp(w http.ResponseWriter, r *http.Request) {
 
 	// Create and write json response to the client
 	type CreateResponseResult struct {
-		Dates       Dates  `json:"dates"`
+		Dates       []int64  `json:"dates"`
+		Users		Users	`json:"users"`
 		Description string `json:"description"`
 	}
 	type CreateResponse struct {
@@ -179,7 +184,7 @@ func getUserMeetUp(w http.ResponseWriter, r *http.Request) {
 		Error  string               `json:"error"`
 	}
 
-	successResponse := CreateResponse{Result: CreateResponseResult{Dates: meetUpObj.Dates, Description: meetUpObj.Description}, Error: ""}
+	successResponse := CreateResponse{Result: CreateResponseResult{Dates: meetUpObj.Dates, Users: meetUpObj.Users, Description: meetUpObj.Description}, Error: ""}
 
 	js, err := json.Marshal(successResponse)
 	if err != nil {
@@ -339,50 +344,24 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the user name is already in the database. All users are in each Date.Users slice, so only check the first one.
+	// Try and update an existing user with the same name, if the user is already in the database.
 	var userPresent = false
-	if len(meetUpObj.Dates) > 0 && len(meetUpObj.Dates[0].Users) > 0 {
-		for _, userObj := range meetUpObj.Dates[0].Users {
-			if userObj.Name == reqJson.UserName {
-				userPresent = true
-				break
+	for _, userObj := range meetUpObj.Users {
+		if userObj.Name == reqJson.UserName {
+			userObj.Dates = reqJson.Dates
+			if err = userObj.Update(); err != nil {
+				log.Printf("updateUser: error updating users: %s\n", err)
+				writeJsonError(w, "database error updating user.")
+				return
 			}
+			userPresent = true
+			break
 		}
 	}
-
-	if userPresent == true {
-		users := Users{}
-
-		for index, dateObj := range meetUpObj.Dates { // loop over dates
-			for _, reqDate := range reqJson.Dates { // Get matching date to update. Only dates the user is available for are included in the query
-				user := User{IdDate: meetUpObj.Dates[index].Id, Name: reqJson.UserName, Available: false}
-				if reqDate == dateObj.Date {
-					user.Available = true
-				}
-				users = append(users, user)
-			}
-		}
-
-		if err = users.UpdateUsers(); err != nil {
-			log.Printf("updateUser: error updating users: %s\n", err)
-			writeJsonError(w, "database error updating user.")
-			return
-		}
-
-	} else {
-		// Go through database dates, try and get each date from the form, add user to each date, if date present in form will be "<timestamp>":"on" in form
-		users := Users{}
-		for index, dateObj := range meetUpObj.Dates {
-			user := User{IdDate: meetUpObj.Dates[index].Id, Name: reqJson.UserName, Available: true}
-
-			if len(r.FormValue(strconv.FormatInt(dateObj.Date, 10))) == 0 { // Not present, add user as unavailable
-				user.Available = false
-			}
-
-			users = append(users, user)
-		}
-
-		if err = users.CreateUsers(); err != nil {
+	// Update failed, create a new user
+	if userPresent == false {
+		user := User{IdMeetUp: meetUpObj.Id, Name: reqJson.UserName, Dates: reqJson.Dates}
+		if err = user.Create(); err != nil {
 			log.Printf("updateUser: error creating users: %s\n", err)
 			writeJsonError(w, "database error creating user.")
 			return
@@ -439,21 +418,13 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var userIds []int64
-
-	for _, dateObj := range meetUpObj.Dates {
-		for _, userObj := range dateObj.Users {
-			if userObj.Name == reqJson.UserName {
-				userIds = append(userIds, userObj.Id)
+	for _, userObj := range meetUpObj.Users {
+		if userObj.Name == reqJson.UserName {
+			if err := userObj.Delete(); err != nil {
+				log.Printf("deleteUser: err deleting user: %s\n", err)
+				writeJsonError(w, "database error.")
+				return
 			}
-		}
-	}
-
-	if len(userIds) > 0 {
-		if err := DeleteByUserIds(userIds); err != nil {
-			log.Printf("deleteUser: err deleting user: %s\n", err)
-			writeJsonError(w, "database error.")
-			return
 		}
 	}
 
