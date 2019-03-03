@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -94,6 +95,54 @@ func closeDatabaseStatements() {
 		}
 	}
 }
+
+
+// Set json output format and fields
+func (m *MeetUp) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Dates       Dates  `json:"dates"`
+		Admin       Admin  `json:"admin"`
+		Description string `json:"description"`
+	}{
+		m.Dates,
+		m.Admin,
+		m.Description,
+	})
+}
+
+// Set json output format and fields
+func (d *Date) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Date  int64 `json:"date"`
+		Users Users `json:"users"`
+	}{
+		d.Date,
+		d.Users,
+	})
+}
+
+// Set json output format and fields
+func (u *User) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Name      string `json:"name"`
+		Available bool   `json:"available"`
+	}{
+		u.Name,
+		u.Available,
+	})
+}
+
+// Set json output format and fields
+func (a *Admin) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Email  string `json:"email"`
+		Alerts bool   `json:"alerts"`
+	}{
+		a.Email,
+		a.Alerts,
+	})
+}
+
 
 // Creates a meetup and all children in one transaction. Does not update the receiver.
 func (m *MeetUp) CreateMeetUp() error {
@@ -433,6 +482,31 @@ func (u *Users) UpdateUsers() error {
 	}
 
 	err = updateTx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Deletes all users
+func DeleteByUserIds(userIds []int64) error {
+	deleteTx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Do Users Delete
+	for _, id := range userIds {
+		_, err := deleteTx.Stmt(preparedStmts["deleteUser"]).Exec(id)
+		if err != nil {
+			if rollErr := deleteTx.Rollback(); rollErr != nil {
+				return rollErr
+			}
+			return err
+		}
+	}
+
+	err = deleteTx.Commit()
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/mail"
@@ -328,6 +329,28 @@ func TestUsers_GetAllByDateId(t *testing.T) {
 
 func TestUsers_CreateUsers(t *testing.T) {
 	// TODO test
+}
+
+
+func TestMeetUp_MarshalJSON(t *testing.T) {
+	var meetUpObj = MeetUp{
+		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		Dates: Dates{
+			{Date: 1549537200000, Users: Users{
+				{Name: "user1", Available: true},
+			}},
+		},
+		Admin:       Admin{Email: "testy@testy.test", Alerts: true},
+		Description: "ljkas;ldfjk;asldkjf",
+	}
+
+	if js, err := json.MarshalIndent(&meetUpObj, "", "	"); err != nil {
+		t.Errorf("MeetUp couldn't be marshalled. error: %s", err)
+	} else {
+		fmt.Printf("%s\n", js)
+	}
+
 }
 
 /*

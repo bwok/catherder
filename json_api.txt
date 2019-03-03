@@ -8,11 +8,11 @@ REQUEST:
 	description: string,
 	dates: [
 		{
-		    date: int,	            // signed 64 bit millisecond UNIX timestamp
+		    date: int,	            // signed 64 bit millisecond UNIX timestamp. Minimum value = 0.
 			users: [
 				{
 				    name: string,
-				    available: string
+				    available: bool
 				}, ....
 			]
 		}, ....
@@ -103,7 +103,7 @@ REQUEST:
 {
     userhash: string,               // hash
     username: string,               // If the username already exists, the existing user gets updated, else the user gets created.
-    dates: [int, ....],	            // signed 64 bit millisecond UNIX timestamps
+    dates: [int, ....],	            // Dates the user is available for. Signed 64 bit millisecond UNIX timestamps
 }
 RESPONSE:
 {

@@ -8,7 +8,7 @@ var dateTool = new function () {
 	var numDateElements = 10;	// The number of visible date elements in the tool. Scrolls left and right by this many.
 	var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 	var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
+	var minDate = new Date(1);
 	/**
 	 * Initialises the date tool. Throws an exception if startDate is not a date object.
 	 * @param {HTMLElement} parentElement

@@ -22,7 +22,7 @@ function init () {
 			args.dates.push({date: selectedDates[i], users: []});
 		}
 
-		sendAjaxRequest("create", JSON.stringify(args), function (error, response) {
+		sendAjaxRequest("/api/updatemeetup", JSON.stringify(args), function (error, response) {
 			if(error !== null){
 				errorArea.textContent = error;
 				errorArea.classList.remove("hidden");
@@ -32,12 +32,12 @@ function init () {
 				errorArea.classList.remove("hidden");
 			} else {
 				var link = document.getElementById("userLink");
-				link.href = window.location.origin + "/view?id=" + encodeURIComponent(response.result.userlink);
-				link.textContent = window.location.origin + "/view?id=" + encodeURIComponent(response.result.userlink);
+				link.href = window.location.origin + "/view?id=" + encodeURIComponent(response.result.userhash);
+				link.textContent = window.location.origin + "/view?id=" + encodeURIComponent(response.result.userhash);
 
 				link = document.getElementById("adminLink");
-				link.href = window.location.origin + "/admin?id=" + encodeURIComponent(response.result.adminlink);
-				link.textContent = window.location.origin + "/admin?id=" + encodeURIComponent(response.result.adminlink);
+				link.href = window.location.origin + "/admin?id=" + encodeURIComponent(response.result.adminhash);
+				link.textContent = window.location.origin + "/admin?id=" + encodeURIComponent(response.result.adminhash);
 
 				document.getElementById("linkArea").classList.remove("hidden");
 
