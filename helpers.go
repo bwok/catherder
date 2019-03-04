@@ -93,10 +93,10 @@ func convertDatesToBlob(intSlice []int64) []byte {
 
 // convert blob []byte to date []int64
 func convertBlobToDates(blobBytes []byte) []int64 {
-	var intSlice []int64
+	var intSlice = make([]int64, 0)
 
 	for i := 0; i < len(blobBytes); i += binary.MaxVarintLen64 {
-		outInt, _ := binary.Varint(blobBytes[i:i+binary.MaxVarintLen64])
+		outInt, _ := binary.Varint(blobBytes[i : i+binary.MaxVarintLen64])
 		intSlice = append(intSlice, outInt)
 	}
 

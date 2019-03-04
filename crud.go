@@ -11,7 +11,9 @@ import (
 MeetUp CRUD
 */
 func (m *MeetUp) Create() error {
-	result, err := preparedStmts["insertMeetup"].Exec(m.UserHash, m.AdminHash, m.AdminEmail, m.SendAlerts, m.Dates, m.Description)
+	datesBlob := convertDatesToBlob(m.Dates)
+
+	result, err := preparedStmts["insertMeetup"].Exec(m.UserHash, m.AdminHash, m.AdminEmail, m.SendAlerts, datesBlob, m.Description)
 	if err != nil {
 		return err
 	}
@@ -35,10 +37,12 @@ func (m *MeetUp) Read(id int64) (retErr error) {
 	}()
 
 	if rows.Next() {
-		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, &m.Dates, &m.Description)
+		var datesBlob []byte
+		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, &datesBlob, &m.Description)
 		if retErr != nil {
 			return
 		}
+		m.Dates = convertBlobToDates(datesBlob)
 	} else {
 		retErr = errors.New("no rows")
 		return
@@ -47,7 +51,8 @@ func (m *MeetUp) Read(id int64) (retErr error) {
 	return nil
 }
 func (m *MeetUp) Update() error {
-	_, err := preparedStmts["updateMeetup"].Exec(m.AdminEmail, m.SendAlerts, m.Dates, m.Description, m.Id)
+	datesBlob := convertDatesToBlob(m.Dates)
+	_, err := preparedStmts["updateMeetup"].Exec(m.AdminEmail, m.SendAlerts, datesBlob, m.Description, m.Id)
 	if err != nil {
 		return err
 	}
@@ -66,7 +71,9 @@ func (m *MeetUp) Delete() error {
 User CRUD
 */
 func (u *User) Create() error {
-	result, err := preparedStmts["insertUser"].Exec(u.IdMeetUp, u.Name, u.Dates)
+	datesBlob := convertDatesToBlob(u.Dates)
+
+	result, err := preparedStmts["insertUser"].Exec(u.IdMeetUp, u.Name, datesBlob)
 	if err != nil {
 		return err
 	}
@@ -91,10 +98,12 @@ func (u *User) Read(id int64) (retErr error) {
 	}()
 
 	if rows.Next() {
-		retErr = rows.Scan(&u.Id, &u.IdMeetUp, &u.Name, &u.Dates)
+		var datesBlob []byte
+		retErr = rows.Scan(&u.Id, &u.IdMeetUp, &u.Name, &datesBlob)
 		if retErr != nil {
 			return
 		}
+		u.Dates = convertBlobToDates(datesBlob)
 	} else {
 		retErr = errors.New("no rows")
 		return
@@ -103,7 +112,9 @@ func (u *User) Read(id int64) (retErr error) {
 	return nil
 }
 func (u *User) Update() error {
-	_, err := preparedStmts["updateUser"].Exec(u.Name, u.Dates, u.Id)
+	datesBlob := convertDatesToBlob(u.Dates)
+
+	_, err := preparedStmts["updateUser"].Exec(u.Name, datesBlob, u.Id)
 	if err != nil {
 		return err
 	}
