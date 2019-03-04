@@ -175,9 +175,9 @@ func getUserMeetUp(w http.ResponseWriter, r *http.Request) {
 
 	// Create and write json response to the client
 	type CreateResponseResult struct {
-		Dates       []int64  `json:"dates"`
-		Users		Users	`json:"users"`
-		Description string `json:"description"`
+		Dates       []int64 `json:"dates"`
+		Users       Users   `json:"users"`
+		Description string  `json:"description"`
 	}
 	type CreateResponse struct {
 		Result CreateResponseResult `json:"result"`
@@ -329,6 +329,12 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	if err = validateHash(reqJson.UserHash); err != nil {
 		log.Printf("updateUser failed: invalid user hash: %s\n", err)
 		writeJsonError(w, "invalid hash.")
+		return
+	}
+
+	// Check the username is not empty
+	if reqJson.UserName == "" {
+		writeJsonError(w, "The user name is empty.")
 		return
 	}
 
