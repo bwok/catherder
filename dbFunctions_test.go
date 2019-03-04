@@ -331,7 +331,6 @@ func TestUsers_CreateUsers(t *testing.T) {
 	// TODO test
 }
 
-
 func TestMeetUp_MarshalJSON(t *testing.T) {
 	var meetUpObj = MeetUp{
 		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",

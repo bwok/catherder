@@ -12,21 +12,21 @@ import (
 // database struct definitions, custom sql etc.
 
 type User struct {
-	Id        int64
-	IdMeetUp    int64
-	Name      string `json:"name"`
-	Dates 	[]int64 `json:"dates"`	// dates the user is available for. This is a UNIX timestamp in milliseconds, as per ecma script defines it. "The number of milliseconds between 1 January 1970 00:00:00 UTC and the given date."
+	Id       int64
+	IdMeetUp int64
+	Name     string  `json:"name"`
+	Dates    []int64 `json:"dates"` // dates the user is available for. This is a UNIX timestamp in milliseconds, as per ecma script defines it. "The number of milliseconds between 1 January 1970 00:00:00 UTC and the given date."
 }
 type Users []User
 type MeetUp struct {
 	Id          int64
-	UserHash    string `json:"userhash"`
-	AdminHash   string `json:"adminhash"`
-	AdminEmail    string `json:"adminemail"`
-	SendAlerts   bool   `json:"sendalerts"`
-	Dates       []int64  `json:"dates"`	// This is a UNIX timestamp in milliseconds, as per ecma script defines it. "The number of milliseconds between 1 January 1970 00:00:00 UTC and the given date."
-	Description string `json:"description"`
-	Users		Users	`json:"users"`
+	UserHash    string  `json:"userhash"`
+	AdminHash   string  `json:"adminhash"`
+	AdminEmail  string  `json:"adminemail"`
+	SendAlerts  bool    `json:"sendalerts"`
+	Dates       []int64 `json:"dates"` // This is a UNIX timestamp in milliseconds, as per ecma script defines it. "The number of milliseconds between 1 January 1970 00:00:00 UTC and the given date."
+	Description string  `json:"description"`
+	Users       Users   `json:"users"`
 }
 
 // Prepared statements that functions can use.
@@ -46,10 +46,10 @@ func prepareDatabaseStatements() {
 		"selectMeetupByAdminhash": "SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup WHERE adminhash = ?",
 		"deleteMeetupByAdminhash": "DELETE from meetup WHERE adminhash = ?",
 
-		"insertUser":          "INSERT INTO user(meetup_idmeetup, name, dates) values(?,?,?)",
-		"selectUser":          "SELECT iduser,meetup_idmeetup,name,dates FROM user WHERE iduser = ?",
-		"updateUser":          "UPDATE user SET name = ?, dates = ? WHERE iduser = ?",
-		"deleteUser":          "DELETE from user WHERE iduser = ?",
+		"insertUser":            "INSERT INTO user(meetup_idmeetup, name, dates) values(?,?,?)",
+		"selectUser":            "SELECT iduser,meetup_idmeetup,name,dates FROM user WHERE iduser = ?",
+		"updateUser":            "UPDATE user SET name = ?, dates = ? WHERE iduser = ?",
+		"deleteUser":            "DELETE from user WHERE iduser = ?",
 		"selectUsersByMeetUpid": "SELECT * FROM user WHERE meetup_idmeetup = ?",
 	}
 
@@ -73,17 +73,16 @@ func closeDatabaseStatements() {
 	}
 }
 
-
 // Set json output format and fields
 func (m *MeetUp) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		UserHash    string `json:"userhash"`
-		AdminHash   string `json:"adminhash"`
-		AdminEmail    string `json:"adminemail"`
-		SendAlerts   bool   `json:"sendalerts"`
-		Dates       []int64  `json:"dates"`
-		Description string `json:"description"`
-		Users		Users	`json:"users"`
+		UserHash    string  `json:"userhash"`
+		AdminHash   string  `json:"adminhash"`
+		AdminEmail  string  `json:"adminemail"`
+		SendAlerts  bool    `json:"sendalerts"`
+		Dates       []int64 `json:"dates"`
+		Description string  `json:"description"`
+		Users       Users   `json:"users"`
 	}{
 		m.UserHash,
 		m.AdminHash,
@@ -98,14 +97,13 @@ func (m *MeetUp) MarshalJSON() ([]byte, error) {
 // Set json output format and fields
 func (u *User) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		Name      string `json:"name"`
-		Dates 	[]int64 `json:"dates"`
+		Name  string  `json:"name"`
+		Dates []int64 `json:"dates"`
 	}{
 		u.Name,
 		u.Dates,
 	})
 }
-
 
 // Creates a meetup and all children in one transaction. Does not update the receiver.
 func (m *MeetUp) CreateMeetUp() error {
