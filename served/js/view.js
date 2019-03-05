@@ -152,6 +152,22 @@ var viewObj = new function(){
 			}
 		});
 	}
+
+	/**
+	 * Deletes the user with username, then refreshes the grid.
+	 * @param username
+	 */
+	function deleteUser(username){
+		sendAjaxRequest("/api/deleteuser", JSON.stringify({userhash:userhash, username:username}), function(error, response){
+			if(error !== null){
+				showError(error.toString());
+			} else if(response.error !== ""){
+				showError(response.error);
+			} else{
+				refreshDateGrid();
+			}
+		});
+	}
 };
 
 
