@@ -52,6 +52,8 @@ var viewObj = new function(){
 	 * Gets the username and checked checkboxes, and requests the backend add the user.
 	 */
 	function addUser(){
+		clearError();
+
 		var userName = document.querySelector(".username").value;
 		var checkedDates = document.querySelectorAll(".newuser:checked");
 		var dates = [];
@@ -71,7 +73,6 @@ var viewObj = new function(){
 			} else if(response.error !== ""){
 				showError(response.error);
 			} else{
-				clearError();
 				refreshDateGrid();
 			}
 		});
