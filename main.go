@@ -49,7 +49,7 @@ func main() {
 	// Serve https traffic
 	httpsServeMux := http.NewServeMux()
 	httpsServeMux.Handle("/served/", http.StripPrefix("/served/", http.FileServer(http.Dir("./served/"))))
-	httpsServeMux.HandleFunc("/edit.html", pageNewHandler)
+	httpsServeMux.HandleFunc("/edit", pageEditHandler)
 	httpsServeMux.HandleFunc("/view", pageViewHandler)
 
 	// JSON handlers

@@ -11,7 +11,7 @@ import (
 )
 
 // Handles requests to new.html
-func pageNewHandler(w http.ResponseWriter, r *http.Request) {
+func pageEditHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';")
 	http.ServeFile(w, r, "templates/edit.html")

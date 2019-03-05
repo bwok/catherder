@@ -11,7 +11,7 @@ import (
 func TestPageNewHandler(t *testing.T) {
 	request := httptest.NewRequest("GET", "https://localhost/new.html", nil)
 	w := httptest.NewRecorder()
-	pageNewHandler(w, request)
+	pageEditHandler(w, request)
 
 	response := w.Result()
 	body, _ := ioutil.ReadAll(response.Body)
