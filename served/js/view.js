@@ -6,7 +6,6 @@ var viewObj = new function(){
 	var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 	var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-
 	/**
 	 * Initialise any bits that need initialising.
 	 */
@@ -21,8 +20,6 @@ var viewObj = new function(){
 		} else {
 			document.querySelector(".shareLink").textContent = window.location.origin + "/view?id=" + encodeURIComponent(userhash);
 		}
-
-
 
 		document.getElementById("saveButt").addEventListener("click", function(){
 			addUser();
@@ -91,6 +88,7 @@ var viewObj = new function(){
 				showError(response.error);
 			} else{
 				clearError();
+				document.querySelector(".description").textContent = response.result.description;
 				var i;
 				var usersArray = response.result.users;
 
