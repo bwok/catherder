@@ -80,6 +80,12 @@
     border-bottom: 0.1rem solid #000000;
     background-color: #fff;
 }
+.row > svg {
+    float: right;
+}
+.row > svg:hover{
+    cursor: pointer;
+}
 .rowAvailable {
     background: #cdeaa1;
 }

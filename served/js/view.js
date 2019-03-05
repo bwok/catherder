@@ -17,7 +17,7 @@ var viewObj = new function(){
 
 		if(userhash === null){
 			showError("No id argument was found in the URL.");
-		} else {
+		} else{
 			document.querySelector(".shareLink").textContent = window.location.origin + "/view?id=" + encodeURIComponent(userhash);
 		}
 
@@ -99,7 +99,14 @@ var viewObj = new function(){
 				for(i = 0; i < usersArray.length; i++){
 					var userDiv = document.createElement("div");
 					userDiv.classList.add("row");
-					userDiv.textContent = usersArray[i].name;
+					userDiv.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 448 512"><path d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"></path></svg>';
+
+					userDiv.querySelector("svg").addEventListener("click", function(){
+						deleteUser(this.parentElement.textContent);
+					});
+
+					var nameText = document.createTextNode(usersArray[i].name);
+					userDiv.appendChild(nameText);
 					nameColumn.appendChild(userDiv);
 				}
 				nameColumn.insertAdjacentHTML("beforeend", '<div class="row"><input class="username" type="text" name="username" placeholder="New user..."></div>');
@@ -158,7 +165,10 @@ var viewObj = new function(){
 	 * @param username
 	 */
 	function deleteUser(username){
-		sendAjaxRequest("/api/deleteuser", JSON.stringify({userhash:userhash, username:username}), function(error, response){
+		sendAjaxRequest("/api/deleteuser", JSON.stringify({
+			userhash: userhash,
+			username: username
+		}), function(error, response){
 			if(error !== null){
 				showError(error.toString());
 			} else if(response.error !== ""){
@@ -176,3 +186,5 @@ document.onreadystatechange = function(){
 		viewObj.init();
 	}
 };
+
+
