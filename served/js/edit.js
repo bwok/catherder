@@ -19,10 +19,15 @@ var editObj = new function(){
 			dateTool.init(dateContainer, startDate.valueOf(), []);
 		} else{
 			getMeetUp();
+			document.getElementById("deleteButt").classList.remove("hidden");
 		}
 
 		document.getElementById('saveButt').addEventListener('click', function(){
 			saveMeetUp();
+		});
+
+		document.getElementById("deleteButt").addEventListener("click", function(){
+			deleteMeetUp();
 		});
 
 		document.getElementById('cancelButt').addEventListener('click', function(){
@@ -106,6 +111,21 @@ var editObj = new function(){
 
 				// meetup created, remove the edit area just leaving the links.
 				document.body.removeChild(document.querySelector(".editArea"));
+			}
+		});
+	}
+
+	/**
+	 * Deletes the meetup, and redirects the user to the home page.
+	 */
+	function deleteMeetUp(){
+		sendAjaxRequest("/api/deletemeetup", JSON.stringify({adminhash: adminhash}), function(error, response){
+			if(error !== null){
+				showError(error.toString());
+			} else if(response.error !== ""){
+				showError(response.error);
+			} else{
+				window.location.href = window.location.origin;
 			}
 		});
 	}
