@@ -1,41 +1,37 @@
 "use strict";
 /**
- * A scrollbox with selectable dates. Scrollable within a specified date range.
+ * A scrollbox with selectable dates. Scrollable within the allowable javascript date ranges.
  */
 var dateTool = new function(){
-	var minDate, maxDate, currDate, parentContainer, dateScrollCont;
+	var currDate, parentContainer, dateScrollCont;
 	var selectedDates = [];		// UTC timestamps of selected dates, stored as numbers not strings.
 	var numDateElements = 10;	// The number of visible date elements in the tool. Scrolls left and right by this many.
 	var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 	var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-	var minDate = new Date(1);
+	var minDate = 0;
+	var maxDate = 8640000000000000; // A.D. 275760
+
 	/**
 	 * Initialises the date tool. Throws an exception if startDate is not a date object.
 	 * @param {HTMLElement} parentElement
-	 * @param {Date} startDate
-	 * @param {Date} [endDate=]
+	 * @param {Number} startDate
+	 * @param {Array} dateArray    array of selected dates. unix millisecond timestamps.
 	 */
-	this.init = function(parentElement, startDate, endDate){
+	this.init = function(parentElement, startDate, dateArray){
 		if(parentElement instanceof Node === false || document.contains(parentElement) === false){
 			throw "dateTool init(): parentContainer is not a document node."
 		} else{
 			parentContainer = parentElement;
 		}
-		if(startDate instanceof Date === false){
-			throw "dateTool init(): startDate is not a date."
+		if(Number.isInteger(startDate) === false || startDate < minDate || startDate > maxDate){
+			throw "dateTool init(): startDate is not a valid unix timestamp."
 		}
-		if(endDate instanceof Date === true){
-			maxDate = endDate
-		} else{
-			maxDate = new Date(8640000000000000); // No date, default to A.D. 275760
+		if(Array.isArray(dateArray) === false){
+			throw "dateTool init(): dateArray is not an array."
 		}
 
-		minDate = startDate;
-		// set the minimum and maximum dates to 00:00:00 local time.
-		minDate.setHours(0, 0, 0, 0);
-		maxDate.setHours(0, 0, 0, 0);
-		currDate = new Date(minDate.valueOf());
-
+		currDate = startDate;
+		selectedDates = dateArray;
 		parentContainer = parentElement;
 		createSkeleton();
 	};
@@ -76,11 +72,11 @@ var dateTool = new function(){
 	 * @param {number} direction -1 scrolls left, 1 scrolls right
 	 */
 	function scrollElements(direction){
-		var startDate = new Date(currDate.valueOf());
+		var startDate = currDate;
 
 		if(direction === -1 && minDate < startDate){
 			makeElements(-1);
-		} else if(direction === 1 && maxDate.valueOf() > startDate.valueOf() + (numDateElements * 86400000)){
+		} else if(direction === 1 && maxDate > startDate + (numDateElements * 86400000)){	// numDays*num milliseconds in a day
 			makeElements(1)
 		}
 	}
@@ -92,19 +88,19 @@ var dateTool = new function(){
 	function makeElements(direction){
 
 		if(dateScrollCont.children.length !== 0){
-			currDate.setDate(currDate.getDate() + numDateElements * direction);
+			currDate = currDate + (numDateElements * 86400000) * direction;
 		}
 
-		var startDate = new Date(currDate.valueOf());
+		var startDate = currDate;
 		dateScrollCont.innerHTML = '';
 
 		for(var i = 0; i < numDateElements; i++){
 			var parentSpan = document.createElement("span");
 			parentSpan.classList.add("dateBox");
-			parentSpan.setAttribute("data-date", startDate.valueOf().toString(10));
+			parentSpan.setAttribute("data-date", startDate);
 
 			// Highlight previously selected dates on scroll
-			if(selectedDates.indexOf(startDate.valueOf()) >= 0){
+			if(selectedDates.indexOf(startDate) >= 0){
 				parentSpan.classList.add("selectedDate");
 			}
 
@@ -126,22 +122,23 @@ var dateTool = new function(){
 				});
 			});
 
+			var dateObj = new Date(startDate);
 			var monthSpan = document.createElement("span");
-			monthSpan.textContent = months[startDate.getMonth()];
+			monthSpan.textContent = months[dateObj.getMonth()];
 
 			var dateSpan = document.createElement("span");
 			dateSpan.classList.add("date");
-			dateSpan.textContent = startDate.getDate().toString(10);
+			dateSpan.textContent = dateObj.getDate().toString(10);
 
 			var daySpan = document.createElement("span");
-			daySpan.textContent = days[startDate.getDay()];
+			daySpan.textContent = days[dateObj.getDay()];
 
 			parentSpan.appendChild(monthSpan);
 			parentSpan.appendChild(dateSpan);
 			parentSpan.appendChild(daySpan);
 			dateScrollCont.appendChild(parentSpan);
 
-			startDate.setDate(startDate.getDate() + Math.abs(direction))
+			startDate = startDate + 86400000;
 		}
 	}
 };

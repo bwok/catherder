@@ -14,7 +14,9 @@ var editObj = new function(){
 		adminhash = params.get("id");
 
 		if(adminhash === null){
-			dateTool.init(dateContainer, new Date());
+			var startDate = new Date();
+			startDate.setHours(0, 0, 0, 0);
+			dateTool.init(dateContainer, startDate.valueOf(), []);
 		} else{
 			getMeetUp();
 		}
@@ -59,7 +61,14 @@ var editObj = new function(){
 				emailElem.value = response.result.adminemail;
 				notifyElem.checked = response.result.sendalerts;
 				descrElem.value = response.result.description;
-				// TODO generate date picker elements.
+
+				if(response.result.dates.length === 0){
+					var startDate = new Date();
+					startDate.setHours(0, 0, 0, 0);
+					dateTool.init(dateContainer, startDate.valueOf(), response.result.dates);
+				} else{
+					dateTool.init(dateContainer, response.result.dates[0], response.result.dates);
+				}
 			}
 		});
 	}
