@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -59,8 +60,8 @@ func TestMeetUp_Create(t *testing.T) {
 	defer DestroyTestDb(testDbName)
 
 	var tests = []MeetUp{
-		{UserHash: "abc", AdminHash: "def", Description: "meetUp description"},
-		{Id: -1, UserHash: "abc", AdminHash: "def", Description: "meetUp description"},
+		{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"},
+		{Id: -1, UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{}, Description: "meetUp description"},
 	}
 
 	for _, meetUp := range tests {
@@ -74,7 +75,7 @@ func TestMeetUp_Create(t *testing.T) {
 				t.Fatalf("couldn't read row back from meetup table: %s\n", err)
 			}
 
-			if retMeetUp.Id != meetUp.Id || retMeetUp.UserHash != meetUp.UserHash || retMeetUp.AdminHash != meetUp.AdminHash || retMeetUp.Description != meetUp.Description {
+			if retMeetUp.Id != meetUp.Id || compareMeetUpObjects(retMeetUp, meetUp) == false {
 				t.Errorf("returned row from DB was different to the one inserted. inserted: %+v, returned: %+v\n", meetUp, retMeetUp)
 			}
 		}
@@ -85,14 +86,15 @@ func TestMeetUp_Update(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Description: "test description"}
+	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 
 	if err := meetUp.Create(); err != nil {
 		t.Fatalf("create failed: %s\n", err)
 	}
 
-	meetUp.UserHash = "xyz"
-	meetUp.AdminHash = "uvw"
+	meetUp.AdminEmail = "abc@def.hij"
+	meetUp.SendAlerts = false
+	meetUp.Dates = []int64{1550401200000}
 	meetUp.Description = "rst"
 	if err := meetUp.Update(); err != nil {
 		t.Fatalf("update failed: %s\n", err)
@@ -103,7 +105,7 @@ func TestMeetUp_Update(t *testing.T) {
 		t.Fatalf("couldn't read row back from meetup table: %s\n", err)
 	}
 
-	if retMeetUp.Id != meetUp.Id || retMeetUp.Description != "rst" {
+	if retMeetUp.Id != meetUp.Id || compareMeetUpObjects(retMeetUp, meetUp) == false {
 		t.Errorf("returned row from DB was different to the one updated. updated: %+v, returned: %+v\n", meetUp, retMeetUp)
 	}
 }
@@ -112,7 +114,7 @@ func TestMeetUp_Delete(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Description: "test description"}
+	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 
 	if err := meetUp.Create(); err != nil {
 		t.Fatalf("create failed: %s\n", err)
@@ -133,220 +135,23 @@ func TestMeetUp_Delete(t *testing.T) {
 	}
 }
 
-// Tests the Admin.Read method too
-func TestAdmin_Create(t *testing.T) {
-	testDbName := CreateTestDb(t)
-	defer DestroyTestDb(testDbName)
-
-	meetUp := MeetUp{UserHash: "abc", AdminHash: "def", Description: "meetUp description"}
-	if err := meetUp.Create(); err != nil {
-		t.Errorf("meetUp create failed: %s\n", err)
-	}
-
-	var tests = []Admin{
-		{Email: "abc", Alerts: true},
-		{Id: -1, Email: "def", Alerts: false},
-	}
-
-	for _, admin := range tests {
-		admin.IdMeetUp = meetUp.Id
-
-		if err := admin.Create(); err != nil {
-			t.Errorf("admin create failed: %s\n", err)
-		} else if admin.Id <= 0 {
-			t.Fatal("no id returned for inserted admin row")
-		} else {
-			retAdmin := Admin{}
-			if err = retAdmin.Read(admin.Id); err != nil {
-				t.Fatalf("couldn't read row back from admin table: %s\n", err)
-			}
-
-			if retAdmin.Id != admin.Id || retAdmin.IdMeetUp != admin.IdMeetUp || retAdmin.Email != admin.Email || retAdmin.Alerts != admin.Alerts {
-				t.Errorf("returned row from DB was different to the one inserted. inserted: %+v, returned: %+v\n", admin, retAdmin)
-			}
-		}
-	}
-}
-
-func TestAdmin_Update(t *testing.T) {
-	testDbName := CreateTestDb(t)
-	defer DestroyTestDb(testDbName)
-
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Description: "test description"}
-
-	if err := meetUp.Create(); err != nil {
-		t.Fatalf("create failed: %s\n", err)
-	}
-
-	var admin = Admin{IdMeetUp: meetUp.Id, Email: "abc", Alerts: true}
-	if err := admin.Create(); err != nil {
-		t.Fatalf("create failed: %s\n", err)
-	}
-
-	admin.Email = "xyz"
-	admin.Alerts = false
-
-	if err := admin.Update(); err != nil {
-		t.Fatalf("update failed: %s\n", err)
-	}
-
-	retAdmin := Admin{}
-	if err := retAdmin.Read(admin.Id); err != nil {
-		t.Fatalf("couldn't read row back from admin table: %s\n", err)
-	}
-
-	if retAdmin.Id != admin.Id || retAdmin.Email != "xyz" || retAdmin.Alerts != false || retAdmin.IdMeetUp != admin.IdMeetUp {
-		t.Errorf("returned row from DB was different to the one updated. updated: %+v, returned: %+v\n", admin, retAdmin)
-	}
-}
-
-func TestAdmin_Delete(t *testing.T) {
-	testDbName := CreateTestDb(t)
-	defer DestroyTestDb(testDbName)
-
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Description: "test description"}
-
-	if err := meetUp.Create(); err != nil {
-		t.Fatalf("create failed: %s\n", err)
-	}
-
-	var admin = Admin{IdMeetUp: meetUp.Id, Email: "abc", Alerts: true}
-	if err := admin.Create(); err != nil {
-		t.Fatalf("create failed: %s\n", err)
-	}
-
-	retAdmin := Admin{}
-	if err := retAdmin.Read(admin.Id); err != nil {
-		t.Fatalf("couldn't read row back from admin table: %s\n", err)
-	}
-
-	if err := admin.Delete(); err != nil {
-		t.Fatalf("delete failed: %s\n", err)
-	}
-
-	retAdmin = Admin{}
-	if err := retAdmin.Read(admin.Id); err.Error() != "no rows" {
-		t.Fatalf("couldn't read row back from admin table: %s\n", err)
-	}
-}
-
-// Tests the Date.Read method too
-func TestDate_Create(t *testing.T) {
-	testDbName := CreateTestDb(t)
-	defer DestroyTestDb(testDbName)
-
-	meetUp := MeetUp{UserHash: "abc", AdminHash: "def", Description: "meetUp description"}
-	if err := meetUp.Create(); err != nil {
-		t.Errorf("meetUp create failed: %s\n", err)
-	}
-
-	var tests = []Date{
-		{Date: 1549537200000},
-		{Id: -1, Date: 1549537200000},
-	}
-
-	for _, date := range tests {
-		date.IdMeetUp = meetUp.Id
-
-		if err := date.Create(); err != nil {
-			t.Errorf("date create failed: %s\n", err)
-		} else if date.Id <= 0 {
-			t.Fatal("no id returned for inserted date row")
-		} else {
-			retDate := Date{}
-			if err = retDate.Read(date.Id); err != nil {
-				t.Fatalf("couldn't read row back from date table: %s\n", err)
-			}
-
-			if retDate.Id != date.Id || retDate.IdMeetUp != date.IdMeetUp || retDate.Date != date.Date {
-				t.Errorf("returned row from DB was different to the one inserted. inserted: %+v, returned: %+v\n", date, retDate)
-			}
-		}
-	}
-}
-
-func TestDate_Update(t *testing.T) {
-	testDbName := CreateTestDb(t)
-	defer DestroyTestDb(testDbName)
-
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Description: "test description"}
-	if err := meetUp.Create(); err != nil {
-		t.Fatalf("create failed: %s\n", err)
-	}
-
-	var date = Date{IdMeetUp: meetUp.Id, Date: 1549537200000}
-	if err := date.Create(); err != nil {
-		t.Fatalf("create failed: %s\n", err)
-	}
-
-	var newTimestamp int64 = 1549537200099
-	date.Date = newTimestamp
-
-	if err := date.Update(); err != nil {
-		t.Fatalf("update failed: %s\n", err)
-	}
-
-	retDate := Date{}
-	if err := retDate.Read(date.Id); err != nil {
-		t.Fatalf("couldn't read row back from date table: %s\n", err)
-	}
-
-	if retDate.Id != date.Id || retDate.Date != newTimestamp || retDate.IdMeetUp != date.IdMeetUp {
-		t.Errorf("returned row from DB was different to the one updated. updated: %+v, returned: %+v\n", date, retDate)
-	}
-}
-
-func TestDate_Delete(t *testing.T) {
-	testDbName := CreateTestDb(t)
-	defer DestroyTestDb(testDbName)
-
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Description: "test description"}
-	if err := meetUp.Create(); err != nil {
-		t.Fatalf("create failed: %s\n", err)
-	}
-
-	var date = Date{IdMeetUp: meetUp.Id, Date: 1549537200000}
-	if err := date.Create(); err != nil {
-		t.Fatalf("create failed: %s\n", err)
-	}
-
-	retDate := Date{}
-	if err := retDate.Read(date.Id); err != nil {
-		t.Fatalf("couldn't read row back from date table: %s\n", err)
-	}
-
-	if err := date.Delete(); err != nil {
-		t.Fatalf("delete failed: %s\n", err)
-	}
-
-	retDate = Date{}
-	if err := retDate.Read(date.Id); err.Error() != "no rows" {
-		t.Fatalf("couldn't read row back from date table: %s\n", err)
-	}
-}
-
 // Tests the User.Read method too
 func TestUser_Create(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
-	meetUp := MeetUp{UserHash: "abc", AdminHash: "def", Description: "meetUp description"}
+	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 	if err := meetUp.Create(); err != nil {
 		t.Errorf("meetUp create failed: %s\n", err)
 	}
 
-	var date = Date{IdMeetUp: meetUp.Id, Date: 1549537200000}
-	if err := date.Create(); err != nil {
-		t.Fatalf("create failed: %s\n", err)
-	}
-
 	var tests = []User{
-		{Name: "bob", Available: true},
-		{Id: -1, Name: "harry", Available: false},
+		{Name: "bob", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
+		{Id: -1, Name: "harry", Dates: []int64{}},
 	}
 
 	for _, user := range tests {
-		user.IdDate = date.Id
+		user.IdMeetUp = meetUp.Id
 
 		if err := user.Create(); err != nil {
 			t.Errorf("user create failed: %s\n", err)
@@ -358,7 +163,7 @@ func TestUser_Create(t *testing.T) {
 				t.Fatalf("couldn't read row back from user table: %s\n", err)
 			}
 
-			if retUser.Id != user.Id || retUser.IdDate != user.IdDate || retUser.Name != user.Name || retUser.Available != user.Available {
+			if retUser.Id != user.Id || retUser.IdMeetUp != user.IdMeetUp || retUser.Name != user.Name || reflect.DeepEqual(retUser.Dates, user.Dates) == false {
 				t.Errorf("returned row from DB was different to the one inserted. inserted: %+v, returned: %+v\n", user, retUser)
 			}
 		}
@@ -369,25 +174,20 @@ func TestUser_Update(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Description: "test description"}
+	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 	if err := meetUp.Create(); err != nil {
 		t.Fatalf("create failed: %s\n", err)
 	}
 
-	var date = Date{IdMeetUp: meetUp.Id, Date: 1549537200000}
-	if err := date.Create(); err != nil {
-		t.Fatalf("create failed: %s\n", err)
-	}
-
-	var user = User{IdDate: date.Id, Name: "bob", Available: true}
+	var user = User{IdMeetUp: meetUp.Id, Name: "bob", Dates: []int64{1550401200000, 1550487600000, 1550574000000}}
 	if err := user.Create(); err != nil {
 		t.Fatalf("create failed: %s\n", err)
 	}
 
-	var newName string = "harry"
-	var newAvailable bool = false
+	var newName = "harry"
+	var newAvailable = []int64{1550487600000}
 	user.Name = newName
-	user.Available = newAvailable
+	user.Dates = newAvailable
 
 	if err := user.Update(); err != nil {
 		t.Fatalf("update failed: %s\n", err)
@@ -398,8 +198,8 @@ func TestUser_Update(t *testing.T) {
 		t.Fatalf("couldn't read row back from user table: %s\n", err)
 	}
 
-	if retUser.Id != user.Id || retUser.Name != newName || retUser.IdDate != user.IdDate || retUser.Available != user.Available {
-		t.Errorf("returned row from DB was different to the one updated. updated: %+v, returned: %+v\n", date, retUser)
+	if retUser.Id != user.Id || retUser.Name != newName || retUser.IdMeetUp != user.IdMeetUp || reflect.DeepEqual(retUser.Dates, user.Dates) == false {
+		t.Errorf("returned row from DB was different to the one updated. updated: %+v, returned: %+v\n", user, retUser)
 	}
 }
 
@@ -407,17 +207,12 @@ func TestUser_Delete(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Description: "test description"}
+	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 	if err := meetUp.Create(); err != nil {
 		t.Fatalf("create failed: %s\n", err)
 	}
 
-	var date = Date{IdMeetUp: meetUp.Id, Date: 1549537200000}
-	if err := date.Create(); err != nil {
-		t.Fatalf("create failed: %s\n", err)
-	}
-
-	var user = User{IdDate: date.Id, Name: "bob", Available: true}
+	var user = User{IdMeetUp: meetUp.Id, Name: "bob", Dates: []int64{1550401200000, 1550487600000, 1550574000000}}
 	if err := user.Create(); err != nil {
 		t.Fatalf("create failed: %s\n", err)
 	}

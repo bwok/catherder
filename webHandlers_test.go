@@ -29,7 +29,7 @@ func TestPageNewHandler(t *testing.T) {
 		t.Error("Content-Security-Policy header was wrong")
 	}
 
-	file, err := os.Open("templates/new.html")
+	file, err := os.Open("templates/edit.html")
 	if err != nil {
 		t.Fatal(err)
 	}

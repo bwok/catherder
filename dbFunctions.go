@@ -305,28 +305,3 @@ func (u *Users) UpdateUsers() error {
 	}
 	return nil
 }
-
-// Deletes all users with matching IDs
-func DeleteByUserIds(userIds []int64) error {
-	deleteTx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
-	// Do Users Delete
-	for _, id := range userIds {
-		_, err := deleteTx.Stmt(preparedStmts["deleteUser"]).Exec(id)
-		if err != nil {
-			if rollErr := deleteTx.Rollback(); rollErr != nil {
-				return rollErr
-			}
-			return err
-		}
-	}
-
-	err = deleteTx.Commit()
-	if err != nil {
-		return err
-	}
-	return nil
-}
