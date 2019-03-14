@@ -4,17 +4,15 @@ import (
 	"fmt"
 	"log"
 	"net/smtp"
+	"net/url"
 )
-
 
 // Sends an email to the given email address on meetup creation.
 func sendCreationEmail(meetUp MeetUp, serverHostname string) {
 	subject := "A meetup was created."
-
-	// TODO URL encode
 	messageBody := "A meetup has been created.\r\n\r\n" +
-		"Use this link to edit the meetup: https://" + serverHostname + "/edit?id=" + meetUp.AdminHash + "\r\n\r\n" +
-		"Share this link with the meetup participants: https://" + serverHostname + "/view?id=" + meetUp.UserHash + "\r\n"
+		"Use this link to edit the meetup: https://" + serverHostname + "/edit?id=" + url.QueryEscape(meetUp.AdminHash) + "\r\n\r\n" +
+		"Share this link with the meetup participants: https://" + serverHostname + "/view?id=" + url.QueryEscape(meetUp.UserHash) + "\r\n"
 
 	go sendMail(meetUp.AdminEmail, subject, messageBody)
 }
@@ -29,15 +27,13 @@ func sendUserChangedEmail(user User, emailAddress, userHash, serverHostname stri
 		subject = fmt.Sprintf("User %q changed their meetup availability.", user.Name)
 	}
 
-	// TODO URL encode
-	messageBody := fmt.Sprintf("View the meetup here: https://%s/view?id=%s\r\n", serverHostname, userHash)
+	messageBody := fmt.Sprintf("View the meetup here: https://%s/view?id=%s\r\n", serverHostname, url.QueryEscape(userHash))
 
 	go sendMail(emailAddress, subject, messageBody)
 }
 
 // Given an address, subject and mail body, sends an email to the address.
 func sendMail(emailAddress, subject, messageBody string) {
-	// TODO supply these values via a config file
 	username := ""
 	password := ""
 	host := ""
@@ -51,7 +47,7 @@ func sendMail(emailAddress, subject, messageBody string) {
 		messageBody + "\r\n")
 
 	auth := smtp.PlainAuth("", username, password, host)
-	err := smtp.SendMail(host + ":" + port, auth, from, to, msg)
+	err := smtp.SendMail(host+":"+port, auth, from, to, msg)
 	if err != nil {
 		log.Printf("sending notification email failed (%s)", err)
 	}
