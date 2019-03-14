@@ -60,9 +60,11 @@ func readAndValidateJsonMeetUp(r *http.Request, meetUp *MeetUp) error {
 		return errors.New("invalid json")
 	}
 
-	// Validate email address
-	if _, err = mail.ParseAddress(meetUp.AdminEmail); err != nil {
-		return errors.New("invalid email address")
+	// Validate email address. Must be either an empty string or a valid email address.
+	if meetUp.AdminEmail != "" {
+		if _, err = mail.ParseAddress(meetUp.AdminEmail); err != nil {
+			return errors.New("invalid email address")
+		}
 	}
 
 	// Validate dates
