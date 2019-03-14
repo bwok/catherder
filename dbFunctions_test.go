@@ -7,18 +7,17 @@ import (
 	"testing"
 )
 
-
 // Tests most of the other custom sql functions in dbFunctions as a side effect.
 func TestMeetUp_CreateMeetUp(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
 	var meetUpObj = MeetUp{
-		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash:  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 		AdminEmail: "testy@testy.test",
 		SendAlerts: true,
-		Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
+		Dates:      []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
 		Users: Users{
 			{Name: "user1", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
 			{Name: "user2", Dates: []int64{1550401200000, 1550574000000}},
@@ -50,17 +49,16 @@ func TestMeetUp_CreateMeetUp(t *testing.T) {
 	}
 }
 
-
 func TestMeetUp_DeleteByAdminHash(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
 	var meetUpObj = MeetUp{
-		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash:  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 		AdminEmail: "testy@testy.test",
 		SendAlerts: true,
-		Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
+		Dates:      []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
 		Users: Users{
 			{Name: "user1", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
 			{Name: "user2", Dates: []int64{1550401200000, 1550574000000}},
@@ -88,11 +86,11 @@ func TestMeetUp_GetByUserHash(t *testing.T) {
 	defer DestroyTestDb(testDbName)
 
 	var meetUpObj = MeetUp{
-		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash:  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 		AdminEmail: "testy@testy.test",
 		SendAlerts: true,
-		Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
+		Dates:      []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
 		Users: Users{
 			{Name: "user1", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
 			{Name: "user2", Dates: []int64{1550401200000, 1550574000000}},
@@ -124,11 +122,11 @@ func TestMeetUp_GetByAdminHash(t *testing.T) {
 	defer DestroyTestDb(testDbName)
 
 	var meetUpObj = MeetUp{
-		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash:  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 		AdminEmail: "testy@testy.test",
 		SendAlerts: true,
-		Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
+		Dates:      []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
 		Users: Users{
 			{Name: "user1", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
 			{Name: "user2", Dates: []int64{1550401200000, 1550574000000}},
@@ -155,18 +153,17 @@ func TestMeetUp_GetByAdminHash(t *testing.T) {
 	}
 }
 
-
 func TestUsers_CreateUsers(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
 	var meetUpObj = MeetUp{
-		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-		AdminEmail: "testy@testy.test",
-		SendAlerts: true,
-		Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
-		Users: Users{},
+		UserHash:    "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash:   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		AdminEmail:  "testy@testy.test",
+		SendAlerts:  true,
+		Dates:       []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
+		Users:       Users{},
 		Description: "ljkas;ldfjk;asldkjf",
 	}
 
@@ -199,12 +196,12 @@ func TestUsers_UpdateUsers(t *testing.T) {
 	defer DestroyTestDb(testDbName)
 
 	var meetUpObj = MeetUp{
-		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-		AdminEmail: "testy@testy.test",
-		SendAlerts: true,
-		Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
-		Users: Users{},
+		UserHash:    "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash:   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		AdminEmail:  "testy@testy.test",
+		SendAlerts:  true,
+		Dates:       []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
+		Users:       Users{},
 		Description: "ljkas;ldfjk;asldkjf",
 	}
 
@@ -245,7 +242,6 @@ func TestUsers_UpdateUsers(t *testing.T) {
 		t.Errorf("GetAllByMeetUpId() failed: %s\n", err)
 	}
 
-
 	if compareUsersObject(usersObj, dbUsers) == false {
 		t.Errorf("Users slices were different.\nsaved: %+v\nupdated: %+v\n", usersObj, dbUsers)
 	}
@@ -253,12 +249,12 @@ func TestUsers_UpdateUsers(t *testing.T) {
 
 func TestMeetUp_MarshalJSON(t *testing.T) {
 	var meetUpObj = MeetUp{
-		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-		AdminEmail: "testy@testy.test",
-		SendAlerts: true,
-		Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
-		Users: Users{},
+		UserHash:    "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash:   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		AdminEmail:  "testy@testy.test",
+		SendAlerts:  true,
+		Dates:       []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
+		Users:       Users{},
 		Description: "ljkas;ldfjk;asldkjf",
 	}
 
@@ -269,7 +265,6 @@ func TestMeetUp_MarshalJSON(t *testing.T) {
 	}
 
 }
-
 
 // Helper functions to compare some of the properties of various database objects.
 // The IDs don't get compared as one of the passed objects usually doesn't have any
