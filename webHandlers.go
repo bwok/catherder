@@ -71,6 +71,10 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 			writeJsonError(w, "Error creating new meetup.")
 			return
 		}
+
+		if newMeetUp.SendAlerts == true && newMeetUp.AdminEmail != "" {
+			sendCreationEmail(newMeetUp, r.Host)
+		}
 	} else {
 		// Check the adminhash is valid
 		if err = validateHash(newMeetUp.AdminHash); err != nil {
@@ -361,6 +365,9 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			userPresent = true
+			if meetUpObj.SendAlerts == true && meetUpObj.AdminEmail != "" {
+				sendUserChangedEmail(userObj, meetUpObj.AdminEmail, meetUpObj.UserHash, r.Host, false)
+			}
 			break
 		}
 	}
@@ -371,6 +378,9 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 			log.Printf("updateUser: error creating users: %s\n", err)
 			writeJsonError(w, "database error creating user.")
 			return
+		}
+		if meetUpObj.SendAlerts == true && meetUpObj.AdminEmail != "" {
+			sendUserChangedEmail(user, meetUpObj.AdminEmail, meetUpObj.UserHash, r.Host, true)
 		}
 	}
 
@@ -430,6 +440,9 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 				log.Printf("deleteUser: err deleting user: %s\n", err)
 				writeJsonError(w, "database error.")
 				return
+			}
+			if meetUpObj.SendAlerts == true && meetUpObj.AdminEmail != "" {
+				sendUserChangedEmail(userObj, meetUpObj.AdminEmail, meetUpObj.UserHash, r.Host, false)
 			}
 		}
 	}
