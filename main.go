@@ -5,7 +5,6 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
-	"time"
 )
 
 var db *sql.DB
@@ -36,10 +35,10 @@ func main() {
 			url := "https://" + r.Host + r.URL.String()
 			http.Redirect(w, r, url, http.StatusMovedPermanently)
 		}),
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Second,
+//		ReadTimeout:  5 * time.Second,		// uncomment if actually a problem in practise
+//		WriteTimeout: 5 * time.Second,		// uncomment if actually a problem in practise
 	}
-	httpServ.SetKeepAlivesEnabled(false)
+//	httpServ.SetKeepAlivesEnabled(false)	// uncomment if actually a problem in practise
 	go func() { log.Fatal(httpServ.ListenAndServe()) }()
 
 	// Serve https traffic
@@ -63,10 +62,10 @@ func main() {
 	})
 
 	httpsServ := &http.Server{
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 5 * time.Second,
+//		ReadTimeout:  5 * time.Second,		// uncomment if actually a problem in practise
+//		WriteTimeout: 5 * time.Second,		// uncomment if actually a problem in practise
 	}
-	httpsServ.SetKeepAlivesEnabled(false)
+//	httpsServ.SetKeepAlivesEnabled(false)	// uncomment if actually a problem in practise
 	httpsServ.Handler = httpsServeMux
 	log.Fatal(httpsServ.ListenAndServeTLS("./cert.pem", "./key.pem"))
 }
