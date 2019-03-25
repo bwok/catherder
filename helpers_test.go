@@ -2,9 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
-	"io/ioutil"
-	"net/http/httptest"
 	"testing"
 )
 
@@ -33,6 +30,7 @@ func TestValidateHash(t *testing.T) {
 	}
 }
 
+/*
 func TestWriteJsonError(t *testing.T) {
 	// TODO test
 
@@ -50,6 +48,7 @@ func TestWriteJsonError(t *testing.T) {
 	}
 	fmt.Println(string(body))
 }
+*/
 
 func TestReadAndValidateJsonMeetUp(t *testing.T) {
 	// TODO test

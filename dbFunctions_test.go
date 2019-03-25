@@ -1,57 +1,21 @@
+
 package main
 
 import (
 	"encoding/json"
-	"errors"
 	"reflect"
 	"testing"
 )
 
-// Tests most of the other custom sql functions in dbFunctions as a side effect.
-func TestMeetUp_CreateMeetUp(t *testing.T) {
-	testDbName := CreateTestDb(t)
-	defer DestroyTestDb(testDbName)
+import (
+	"errors"
+)
 
-	var meetUpObj = MeetUp{
-		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash:  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-		AdminEmail: "testy@testy.test",
-		SendAlerts: true,
-		Dates:      []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
-		Users: Users{
-			{Name: "user1", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
-			{Name: "user2", Dates: []int64{1550401200000, 1550574000000}},
-			{Name: "user3", Dates: []int64{1550574000000}},
-		},
-		Description: "ljkas;ldfjk;asldkjf",
-	}
 
-	if err := meetUpObj.CreateMeetUp(); err != nil {
-		t.Fatalf("CreateMeetUp() failed: %s\n", err)
-	}
-
-	var retMeetUp = MeetUp{}
-	if err := retMeetUp.GetByUserHash(meetUpObj.UserHash); err != nil {
-		t.Fatalf("GetByUserHash() failed: %s\n", err)
-	}
-
-	if compareMeetUpObjects(meetUpObj, retMeetUp) == false {
-		t.Fatalf("MeetUp objects were different.")
-	}
-
-	retMeetUp = MeetUp{}
-	if err := retMeetUp.GetByAdminHash(meetUpObj.AdminHash); err != nil {
-		t.Fatalf("GetByUserHash() failed: %s\n", err)
-	}
-
-	if compareMeetUpObjects(meetUpObj, retMeetUp) == false {
-		t.Fatalf("MeetUp objects were different.")
-	}
-}
 
 func TestMeetUp_DeleteByAdminHash(t *testing.T) {
-	testDbName := CreateTestDb(t)
-	defer DestroyTestDb(testDbName)
+	openDbConn()
+	defer closeDbConn()
 
 	var meetUpObj = MeetUp{
 		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
@@ -59,16 +23,12 @@ func TestMeetUp_DeleteByAdminHash(t *testing.T) {
 		AdminEmail: "testy@testy.test",
 		SendAlerts: true,
 		Dates:      []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
-		Users: Users{
-			{Name: "user1", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
-			{Name: "user2", Dates: []int64{1550401200000, 1550574000000}},
-			{Name: "user3", Dates: []int64{1550574000000}},
-		},
+		Users: Users{},
 		Description: "ljkas;ldfjk;asldkjf",
 	}
 
-	if err := meetUpObj.CreateMeetUp(); err != nil {
-		t.Fatalf("CreateMeetUp() failed: %s\n", err)
+	if err := meetUpObj.Create(); err != nil {
+		t.Fatalf("MeetUp.Create() failed: %s\n", err)
 	}
 
 	if err := meetUpObj.DeleteByAdminHash(meetUpObj.AdminHash); err != nil {
@@ -82,8 +42,8 @@ func TestMeetUp_DeleteByAdminHash(t *testing.T) {
 }
 
 func TestMeetUp_GetByUserHash(t *testing.T) {
-	testDbName := CreateTestDb(t)
-	defer DestroyTestDb(testDbName)
+	openDbConn()
+	defer closeDbConn()
 
 	var meetUpObj = MeetUp{
 		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
@@ -99,8 +59,14 @@ func TestMeetUp_GetByUserHash(t *testing.T) {
 		Description: "ljkas;ldfjk;asldkjf",
 	}
 
-	if err := meetUpObj.CreateMeetUp(); err != nil {
-		t.Fatalf("CreateMeetUp() failed: %s\n", err)
+	if err := meetUpObj.Create(); err != nil {
+		t.Fatalf("MeetUp.Create() failed: %s\n", err)
+	}
+	for _, user := range meetUpObj.Users {
+		user.IdMeetUp = meetUpObj.Id
+		if err := user.Create(); err != nil {
+			t.Fatalf("User.Create() failed: %s\n", err)
+		}
 	}
 
 	var dbMeetUp = MeetUp{}
@@ -115,11 +81,15 @@ func TestMeetUp_GetByUserHash(t *testing.T) {
 	if compareMeetUpObjects(meetUpObj, dbMeetUp) == false {
 		t.Errorf("MeetUp objects were different.")
 	}
+
+	if err := meetUpObj.Delete(); err != nil {
+		t.Fatalf("delete failed: %s\n", err)
+	}
 }
 
 func TestMeetUp_GetByAdminHash(t *testing.T) {
-	testDbName := CreateTestDb(t)
-	defer DestroyTestDb(testDbName)
+	openDbConn()
+	defer closeDbConn()
 
 	var meetUpObj = MeetUp{
 		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
@@ -135,8 +105,14 @@ func TestMeetUp_GetByAdminHash(t *testing.T) {
 		Description: "ljkas;ldfjk;asldkjf",
 	}
 
-	if err := meetUpObj.CreateMeetUp(); err != nil {
-		t.Fatalf("CreateMeetUp() failed: %s\n", err)
+	if err := meetUpObj.Create(); err != nil {
+		t.Fatalf("Create() failed: %s\n", err)
+	}
+	for _, user := range meetUpObj.Users {
+		user.IdMeetUp = meetUpObj.Id
+		if err := user.Create(); err != nil {
+			t.Fatalf("User.Create() failed: %s\n", err)
+		}
 	}
 
 	var dbMeetUp = MeetUp{}
@@ -151,101 +127,12 @@ func TestMeetUp_GetByAdminHash(t *testing.T) {
 	if compareMeetUpObjects(meetUpObj, dbMeetUp) == false {
 		t.Errorf("MeetUp objects were different.")
 	}
-}
 
-func TestUsers_CreateUsers(t *testing.T) {
-	testDbName := CreateTestDb(t)
-	defer DestroyTestDb(testDbName)
-
-	var meetUpObj = MeetUp{
-		UserHash:    "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash:   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-		AdminEmail:  "testy@testy.test",
-		SendAlerts:  true,
-		Dates:       []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
-		Users:       Users{},
-		Description: "ljkas;ldfjk;asldkjf",
-	}
-
-	if err := meetUpObj.Create(); err != nil {
-		t.Errorf("meetUp create failed: %s\n", err)
-	}
-
-	usersObj := Users{
-		{IdMeetUp: meetUpObj.Id, Name: "user1", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
-		{IdMeetUp: meetUpObj.Id, Name: "user2", Dates: []int64{1550401200000, 1550574000000}},
-		{IdMeetUp: meetUpObj.Id, Name: "user3", Dates: []int64{1550574000000}},
-	}
-
-	if err := usersObj.CreateUsers(); err != nil {
-		t.Errorf("meetUp CreateUsers() failed: %s\n", err)
-	}
-
-	var dbUsers = Users{}
-	if err := dbUsers.GetAllByMeetUpId(meetUpObj.Id); err != nil {
-		t.Errorf("GetAllByMeetUpId() failed: %s\n", err)
-	}
-
-	if compareUsersObject(usersObj, dbUsers) == false {
-		t.Errorf("Users slices were different.")
+	if err := meetUpObj.Delete(); err != nil {
+		t.Fatalf("delete failed: %s\n", err)
 	}
 }
 
-func TestUsers_UpdateUsers(t *testing.T) {
-	testDbName := CreateTestDb(t)
-	defer DestroyTestDb(testDbName)
-
-	var meetUpObj = MeetUp{
-		UserHash:    "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash:   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-		AdminEmail:  "testy@testy.test",
-		SendAlerts:  true,
-		Dates:       []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
-		Users:       Users{},
-		Description: "ljkas;ldfjk;asldkjf",
-	}
-
-	if err := meetUpObj.Create(); err != nil {
-		t.Errorf("meetUp create failed: %s\n", err)
-	}
-
-	usersObj := Users{
-		{IdMeetUp: meetUpObj.Id, Name: "user1", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
-		{IdMeetUp: meetUpObj.Id, Name: "user2", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
-		{IdMeetUp: meetUpObj.Id, Name: "user3", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
-	}
-
-	if err := usersObj.CreateUsers(); err != nil {
-		t.Errorf("meetUp CreateUsers() failed: %s\n", err)
-	}
-	var dbUsers = Users{}
-	if err := dbUsers.GetAllByMeetUpId(meetUpObj.Id); err != nil {
-		t.Errorf("GetAllByMeetUpId() failed: %s\n", err)
-	}
-	if compareUsersObject(usersObj, dbUsers) == false {
-		t.Errorf("Users slices were different.\nsaved: %+v\nupdated: %+v\n", usersObj, dbUsers)
-	}
-	usersObj = dbUsers
-
-	// Database users correctly created and checked at this point, update
-
-	usersObj[0].Dates = []int64{1550401200000}
-	usersObj[1].Dates = []int64{1550487600000}
-	usersObj[2].Dates = []int64{1550574000000}
-
-	if err := usersObj.UpdateUsers(); err != nil {
-		t.Errorf("meetUp UpdateUsers() failed: %s\n", err)
-	}
-
-	dbUsers = Users{}
-	if err := dbUsers.GetAllByMeetUpId(meetUpObj.Id); err != nil {
-		t.Errorf("GetAllByMeetUpId() failed: %s\n", err)
-	}
-
-	if compareUsersObject(usersObj, dbUsers) == false {
-		t.Errorf("Users slices were different.\nsaved: %+v\nupdated: %+v\n", usersObj, dbUsers)
-	}
-}
 
 func TestMeetUp_MarshalJSON(t *testing.T) {
 	var meetUpObj = MeetUp{
@@ -328,3 +215,4 @@ func validateUserObject(meetUpId int64, user User) error {
 		return nil
 	}
 }
+

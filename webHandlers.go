@@ -65,7 +65,7 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 		}
 		newMeetUp.AdminHash = fmt.Sprintf("%x", sha256.Sum256(randBytes))
 
-		err = newMeetUp.CreateMeetUp()
+		err = newMeetUp.Create()
 		if err != nil {
 			log.Printf("ajaxCreateHandler: err creating database rows: %s\n", err)
 			writeJsonError(w, "Error creating new meetup.")

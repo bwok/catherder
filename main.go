@@ -2,10 +2,9 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -14,14 +13,11 @@ var db *sql.DB
 func main() {
 	var err error
 
-	// Check the database file is present, open it
-	if _, err = os.Stat("./data.sqlite"); err == nil {
-		if db, err = sql.Open("sqlite3", "file:data.sqlite?_foreign_keys=true"); err != nil {
-			log.Fatal(err)
-		}
-	} else if os.IsNotExist(err) {
+	connStr := "dbname=meetupdatabase user=meetupuser password=testpassword host=192.168.56.51 "
+	if db, err = sql.Open("postgres", connStr); err != nil {
 		log.Fatal(err)
 	}
+
 	defer func() {
 		if closeErr := db.Close(); closeErr != nil {
 			log.Println(closeErr)

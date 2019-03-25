@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
 	"log"
 )
 
@@ -38,26 +39,26 @@ var preparedStmts = make(map[string]*sql.Stmt)
 func prepareDatabaseStatements() {
 	// A map of sql statements that get prepared in prepareDatabaseStatements()
 	var prepStmtInit = map[string]string{
-		"insertMeetup":            "INSERT INTO meetup(userhash, adminhash, adminemail, sendalerts, dates, description) values(?,?,?,?,?,?)",
-		"selectMeetup":            "SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup WHERE idmeetup = ?",
-		"updateMeetup":            "UPDATE meetup SET adminemail = ?, sendalerts = ?, dates = ?, description = ? WHERE idmeetup = ?",
-		"deleteMeetup":            "DELETE from meetup WHERE idmeetup = ?",
-		"selectMeetupByUserhash":  "SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup WHERE userhash = ?",
-		"selectMeetupByAdminhash": "SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup WHERE adminhash = ?",
-		"deleteMeetupByAdminhash": "DELETE from meetup WHERE adminhash = ?",
+		"insertMeetup":            `INSERT INTO meetup.meetup(userhash, adminhash, adminemail, sendalerts, dates, description) values($1,$2,$3,$4,$5,$6) RETURNING idmeetup`,
+		"selectMeetup":            `SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup.meetup WHERE idmeetup = $1`,
+		"updateMeetup":            `UPDATE meetup.meetup SET adminemail = $1, sendalerts = $2, dates = $3, description = $4 WHERE idmeetup = $5`,
+		"deleteMeetup":            `DELETE from meetup.meetup WHERE idmeetup = $1`,
+		"selectMeetupByUserhash":  `SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup.meetup WHERE userhash = $1`,
+		"selectMeetupByAdminhash": `SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup.meetup WHERE adminhash = $1`,
+		"deleteMeetupByAdminhash": `DELETE from meetup.meetup WHERE adminhash = $1`,
 
-		"insertUser":            "INSERT INTO user(meetup_idmeetup, name, dates) values(?,?,?)",
-		"selectUser":            "SELECT iduser,meetup_idmeetup,name,dates FROM user WHERE iduser = ?",
-		"updateUser":            "UPDATE user SET name = ?, dates = ? WHERE iduser = ?",
-		"deleteUser":            "DELETE from user WHERE iduser = ?",
-		"selectUsersByMeetUpid": "SELECT * FROM user WHERE meetup_idmeetup = ?",
+		"insertUser":            `INSERT INTO meetup."user"(idmeetup, name, dates) values($1,$2,$3) RETURNING iduser`,
+		"selectUser":            `SELECT iduser,idmeetup,name,dates FROM meetup."user" WHERE iduser = $1`,
+		"updateUser":            `UPDATE meetup."user" SET name = $1, dates = $2 WHERE iduser = $3`,
+		"deleteUser":            `DELETE from meetup."user" WHERE iduser = $1`,
+		"selectUsersByMeetUpid": `SELECT * FROM meetup."user" WHERE idmeetup = $1`,
 	}
 
 	for key, val := range prepStmtInit {
 		stmt, err := db.Prepare(val)
 
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("prepareDatabaseStatements failed on key %q, val %q, error (%s)", key, val,  err)
 		}
 		preparedStmts[key] = stmt
 	}
@@ -105,50 +106,6 @@ func (u *User) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// Creates a meetup and all children in one transaction. Does not update the receiver.
-func (m *MeetUp) CreateMeetUp() error {
-	insTx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
-	datesBlob := convertDatesToBlob(m.Dates)
-
-	// Do MeetUp Insert
-	resultMeetUp, err := insTx.Stmt(preparedStmts["insertMeetup"]).Exec(m.UserHash, m.AdminHash, m.AdminEmail, m.SendAlerts, datesBlob, m.Description)
-	if err != nil {
-		if rollBkErr := insTx.Rollback(); rollBkErr != nil {
-			return fmt.Errorf("%s: %s", err, rollBkErr)
-		}
-		return err
-	}
-	idMeetUp, err := resultMeetUp.LastInsertId()
-	if err != nil {
-		if rollBkErr := insTx.Rollback(); rollBkErr != nil {
-			return fmt.Errorf("%s: %s", err, rollBkErr)
-		}
-		return err
-	}
-
-	// Do Users Insert
-	for _, user := range m.Users {
-		datesBlob = convertDatesToBlob(user.Dates)
-
-		_, err := insTx.Stmt(preparedStmts["insertUser"]).Exec(idMeetUp, user.Name, datesBlob)
-		if err != nil {
-			if rollBkErr := insTx.Rollback(); rollBkErr != nil {
-				return fmt.Errorf("%s: %s", err, rollBkErr)
-			}
-			return err
-		}
-	}
-
-	err = insTx.Commit()
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 // Deletes a meetup by its admin hash. Deletes get cascaded to the other tables.
 func (m *MeetUp) DeleteByAdminHash(adminHash string) error {
@@ -173,12 +130,10 @@ func (m *MeetUp) GetByUserHash(userHash string) (retErr error) {
 	}()
 
 	if rows.Next() {
-		var datesBlob []byte
-		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, &datesBlob, &m.Description)
+		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, pq.Array(&m.Dates), &m.Description)
 		if retErr != nil {
 			return
 		}
-		m.Dates = convertBlobToDates(datesBlob)
 	} else {
 		retErr = errors.New("no rows matching the userhash")
 		return
@@ -207,12 +162,10 @@ func (m *MeetUp) GetByAdminHash(adminHash string) (retErr error) {
 	}()
 
 	if rows.Next() {
-		var datesBlob []byte
-		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, &datesBlob, &m.Description)
+		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, pq.Array(&m.Dates), &m.Description)
 		if retErr != nil {
 			return
 		}
-		m.Dates = convertBlobToDates(datesBlob)
 	} else {
 		retErr = errors.New("no rows matching the adminhash")
 		return
@@ -242,66 +195,12 @@ func (u *Users) GetAllByMeetUpId(idMeetUp int64) (retErr error) {
 	*u = make(Users, 0)
 	for rows.Next() {
 		var user = User{}
-		var datesBlob []byte
-		retErr = rows.Scan(&user.Id, &user.IdMeetUp, &user.Name, &datesBlob)
+		retErr = rows.Scan(&user.Id, &user.IdMeetUp, &user.Name, pq.Array(&user.Dates))
 		if retErr != nil {
 			return
 		}
-		user.Dates = convertBlobToDates(datesBlob)
 		*u = append(*u, user)
 	}
 
-	return nil
-}
-
-// Creates all users in one transaction. Does not update the receiver.
-func (u *Users) CreateUsers() error {
-	insTx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
-	// Do Users Insert
-	for _, user := range *u {
-		datesBlob := convertDatesToBlob(user.Dates)
-		_, err := insTx.Stmt(preparedStmts["insertUser"]).Exec(user.IdMeetUp, user.Name, datesBlob)
-		if err != nil {
-			if rollErr := insTx.Rollback(); rollErr != nil {
-				return rollErr
-			}
-			return err
-		}
-	}
-
-	err = insTx.Commit()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Updates all users in one transaction. Does not update the receiver.
-func (u *Users) UpdateUsers() error {
-	updateTx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
-	// Do Users Update
-	for _, user := range *u {
-		datesBlob := convertDatesToBlob(user.Dates)
-		_, err := updateTx.Stmt(preparedStmts["updateUser"]).Exec(user.Name, datesBlob, user.Id)
-		if err != nil {
-			if rollErr := updateTx.Rollback(); rollErr != nil {
-				return rollErr
-			}
-			return err
-		}
-	}
-
-	err = updateTx.Commit()
-	if err != nil {
-		return err
-	}
 	return nil
 }

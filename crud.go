@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
 )
 
 // CRUD, don't edit by hand.
@@ -11,14 +12,8 @@ import (
 MeetUp CRUD
 */
 func (m *MeetUp) Create() error {
-	datesBlob := convertDatesToBlob(m.Dates)
-
-	result, err := preparedStmts["insertMeetup"].Exec(m.UserHash, m.AdminHash, m.AdminEmail, m.SendAlerts, datesBlob, m.Description)
-	if err != nil {
-		return err
-	}
-
-	m.Id, err = result.LastInsertId()
+	//`INSERT INTO meetup.meetup(userhash, adminhash, adminemail, sendalerts, dates, description) values($1,$2,$3,$4,$5,$6) RETURNING idmeetup`,
+	err := preparedStmts["insertMeetup"].QueryRow(m.UserHash, m.AdminHash, m.AdminEmail, m.SendAlerts, pq.Array(m.Dates), m.Description).Scan(&m.Id)
 	if err != nil {
 		return err
 	}
@@ -37,12 +32,10 @@ func (m *MeetUp) Read(id int64) (retErr error) {
 	}()
 
 	if rows.Next() {
-		var datesBlob []byte
-		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, &datesBlob, &m.Description)
+		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, pq.Array(&m.Dates), &m.Description)
 		if retErr != nil {
 			return
 		}
-		m.Dates = convertBlobToDates(datesBlob)
 	} else {
 		retErr = errors.New("no rows")
 		return
@@ -51,8 +44,7 @@ func (m *MeetUp) Read(id int64) (retErr error) {
 	return nil
 }
 func (m *MeetUp) Update() error {
-	datesBlob := convertDatesToBlob(m.Dates)
-	_, err := preparedStmts["updateMeetup"].Exec(m.AdminEmail, m.SendAlerts, datesBlob, m.Description, m.Id)
+	_, err := preparedStmts["updateMeetup"].Exec(m.AdminEmail, m.SendAlerts, pq.Array(m.Dates), m.Description, m.Id)
 	if err != nil {
 		return err
 	}
@@ -71,19 +63,11 @@ func (m *MeetUp) Delete() error {
 User CRUD
 */
 func (u *User) Create() error {
-	datesBlob := convertDatesToBlob(u.Dates)
-
-	result, err := preparedStmts["insertUser"].Exec(u.IdMeetUp, u.Name, datesBlob)
+	err := preparedStmts["insertUser"].QueryRow(u.IdMeetUp, u.Name, pq.Array(u.Dates)).Scan(&u.Id)
 	if err != nil {
 		return err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	u.Id = id
 	return nil
 }
 func (u *User) Read(id int64) (retErr error) {
@@ -98,12 +82,10 @@ func (u *User) Read(id int64) (retErr error) {
 	}()
 
 	if rows.Next() {
-		var datesBlob []byte
-		retErr = rows.Scan(&u.Id, &u.IdMeetUp, &u.Name, &datesBlob)
+		retErr = rows.Scan(&u.Id, &u.IdMeetUp, &u.Name, pq.Array(&u.Dates))
 		if retErr != nil {
 			return
 		}
-		u.Dates = convertBlobToDates(datesBlob)
 	} else {
 		retErr = errors.New("no rows")
 		return
@@ -112,9 +94,7 @@ func (u *User) Read(id int64) (retErr error) {
 	return nil
 }
 func (u *User) Update() error {
-	datesBlob := convertDatesToBlob(u.Dates)
-
-	_, err := preparedStmts["updateUser"].Exec(u.Name, datesBlob, u.Id)
+	_, err := preparedStmts["updateUser"].Exec(u.Name, pq.Array(u.Dates), u.Id)
 	if err != nil {
 		return err
 	}
