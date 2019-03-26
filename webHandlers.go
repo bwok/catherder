@@ -198,7 +198,7 @@ func getUserMeetUp(w http.ResponseWriter, r *http.Request) {
 
 	if err = meetUpObj.GetByUserHash(reqJson.UserHash); err != nil {
 		if err.Error() == "no rows matching the userhash" {
-			writeJsonError(w, "user hash not found.")
+			writeJsonError(w, "The meetup was not found.")
 		} else {
 			log.Printf("getUserMeetUp: err getting by userhash: %s\n", err)
 			writeJsonError(w, "database error.")
@@ -263,7 +263,7 @@ func getAdminMeetUp(w http.ResponseWriter, r *http.Request) {
 
 	if err = meetUpObj.GetByAdminHash(reqJson.AdminHash); err != nil {
 		if err.Error() == "no rows matching the adminhash" {
-			writeJsonError(w, "admin hash not found.")
+			writeJsonError(w, "The meetup was not found.")
 		} else {
 			log.Printf("getAdminMeetUp: err getting by adminhash: %s\n", err)
 			writeJsonError(w, "database error.")
