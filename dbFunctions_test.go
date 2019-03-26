@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -11,19 +10,17 @@ import (
 	"errors"
 )
 
-
-
 func TestMeetUp_DeleteByAdminHash(t *testing.T) {
 	openDbConn()
 	defer closeDbConn()
 
 	var meetUpObj = MeetUp{
-		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash:  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-		AdminEmail: "testy@testy.test",
-		SendAlerts: true,
-		Dates:      []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
-		Users: Users{},
+		UserHash:    "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash:   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		AdminEmail:  "testy@testy.test",
+		SendAlerts:  true,
+		Dates:       []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
+		Users:       Users{},
 		Description: "ljkas;ldfjk;asldkjf",
 	}
 
@@ -133,7 +130,6 @@ func TestMeetUp_GetByAdminHash(t *testing.T) {
 	}
 }
 
-
 func TestMeetUp_MarshalJSON(t *testing.T) {
 	var meetUpObj = MeetUp{
 		UserHash:    "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
@@ -215,4 +211,3 @@ func validateUserObject(meetUpId int64, user User) error {
 		return nil
 	}
 }
-

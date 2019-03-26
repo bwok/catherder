@@ -8,7 +8,11 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/mail"
 )
+
+const maxLongJsonBytesLen = 4096 // Limit create/update JSON requests to this many bytes
+const maxShortJsonBytesLen = 512 // Limit the other JSON requests to this many bytes
 
 // Handles requests to new.html
 func pageEditHandler(w http.ResponseWriter, r *http.Request) {
@@ -36,9 +40,32 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 
 	var newMeetUp MeetUp
 
-	if err = readAndValidateJsonMeetUp(r, &newMeetUp); err != nil { // Dates and email address validated here
-		writeJsonError(w, err.Error())
+	// Decode the json into a MeetUp struct
+	if err = json.NewDecoder(io.LimitReader(r.Body, maxLongJsonBytesLen)).Decode(newMeetUp); err != nil { // 4KB max json length
+		log.Printf("updateMeetUp invalid json: %s\n", err)
+		writeJsonError(w, "invalid json")
 		return
+	}
+
+	// Validate email address. Must be either an empty string or a valid email address.
+	if newMeetUp.AdminEmail != "" {
+		if _, err = mail.ParseAddress(newMeetUp.AdminEmail); err != nil {
+			writeJsonError(w, "invalid email address")
+			return
+		}
+	}
+
+	// Validate dates
+	if len(newMeetUp.Dates) == 0 {
+		writeJsonError(w, "no dates selected")
+		return
+	} else {
+		for _, date := range newMeetUp.Dates {
+			if date <= 0 {
+				writeJsonError(w, "invalid date")
+				return
+			}
+		}
 	}
 
 	for i := 0; i < len(newMeetUp.Dates); i++ {
@@ -49,8 +76,10 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if newMeetUp.AdminHash == "" { // If no adminhash, a new meetup is being created, therefore generate both the hashes.
+		randByteLen := 64
+
 		// Generate the user hash
-		randBytes := make([]byte, 64)
+		randBytes := make([]byte, randByteLen)
 		if _, err := rand.Read(randBytes); err != nil {
 			log.Printf("updateMeetUp failed: error reading random bytes for user hash. %s\n", err)
 			writeJsonError(w, "Error reading random bytes.")
@@ -58,7 +87,7 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 		newMeetUp.UserHash = fmt.Sprintf("%x", sha256.Sum256(randBytes))
 
 		// Generate the admin hash
-		randBytes = make([]byte, 64)
+		randBytes = make([]byte, randByteLen)
 		if _, err := rand.Read(randBytes); err != nil {
 			log.Printf("updateMeetUp failed: error reading random bytes for admin hash. %s\n", err)
 			writeJsonError(w, "Error reading random bytes.")
@@ -152,7 +181,7 @@ func getUserMeetUp(w http.ResponseWriter, r *http.Request) {
 	var reqJson reqStruct
 
 	// Decode the json
-	if err = json.NewDecoder(io.LimitReader(r.Body, 512)).Decode(&reqJson); err != nil { // 512B max json length
+	if err = json.NewDecoder(io.LimitReader(r.Body, maxShortJsonBytesLen)).Decode(&reqJson); err != nil {
 		log.Printf("getUserMeetUp invalid json: %s\n", err)
 		writeJsonError(w, "invalid json.")
 		return
@@ -218,7 +247,7 @@ func getAdminMeetUp(w http.ResponseWriter, r *http.Request) {
 	var reqJson reqStruct
 
 	// Decode the json
-	if err = json.NewDecoder(io.LimitReader(r.Body, 512)).Decode(&reqJson); err != nil { // 512B max json length
+	if err = json.NewDecoder(io.LimitReader(r.Body, maxShortJsonBytesLen)).Decode(&reqJson); err != nil {
 		log.Printf("getAdminMeetUp invalid json: %s\n", err)
 		writeJsonError(w, "invalid json.")
 	}
@@ -278,7 +307,7 @@ func deleteMeetUp(w http.ResponseWriter, r *http.Request) {
 	var reqJson reqStruct
 
 	// Decode the json
-	if err = json.NewDecoder(io.LimitReader(r.Body, 512)).Decode(&reqJson); err != nil { // 512B max json length
+	if err = json.NewDecoder(io.LimitReader(r.Body, maxShortJsonBytesLen)).Decode(&reqJson); err != nil {
 		log.Printf("deleteMeetUp failed: invalid json: %s\n", err)
 		writeJsonError(w, "invalid json.")
 	}
@@ -324,7 +353,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	var reqJson reqStruct
 
 	// Decode the json
-	if err = json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&reqJson); err != nil { // 4KB max json length
+	if err = json.NewDecoder(io.LimitReader(r.Body, maxLongJsonBytesLen)).Decode(&reqJson); err != nil {
 		log.Printf("updateUser failed: invalid json: %s\n", err)
 		writeJsonError(w, "invalid json.")
 	}
@@ -410,7 +439,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	var reqJson reqStruct
 
 	// Decode the json
-	if err = json.NewDecoder(io.LimitReader(r.Body, 512)).Decode(&reqJson); err != nil { // 512B max json length
+	if err = json.NewDecoder(io.LimitReader(r.Body, maxShortJsonBytesLen)).Decode(&reqJson); err != nil {
 		log.Printf("deleteUser failed: invalid json: %s\n", err)
 		writeJsonError(w, "invalid json.")
 	}

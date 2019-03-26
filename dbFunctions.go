@@ -58,7 +58,7 @@ func prepareDatabaseStatements() {
 		stmt, err := db.Prepare(val)
 
 		if err != nil {
-			log.Fatalf("prepareDatabaseStatements failed on key %q, val %q, error (%s)", key, val,  err)
+			log.Fatalf("prepareDatabaseStatements failed on key %q, val %q, error (%s)", key, val, err)
 		}
 		preparedStmts[key] = stmt
 	}
@@ -105,7 +105,6 @@ func (u *User) MarshalJSON() ([]byte, error) {
 		u.Dates,
 	})
 }
-
 
 // Deletes a meetup by its admin hash. Deletes get cascaded to the other tables.
 func (m *MeetUp) DeleteByAdminHash(adminHash string) error {

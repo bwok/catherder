@@ -49,7 +49,3 @@ func TestWriteJsonError(t *testing.T) {
 	fmt.Println(string(body))
 }
 */
-
-func TestReadAndValidateJsonMeetUp(t *testing.T) {
-	// TODO test
-}
