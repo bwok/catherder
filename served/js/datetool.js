@@ -12,7 +12,7 @@ var dateTool = new function(){
 	var maxDate = 8640000000000000; // A.D. 275760
 
 	/**
-	 * Initialises the date tool. Throws an exception if startDate is not a date object.
+	 * Initialises the date tool. Throws an exception if the input parameters are invalid.
 	 * @param {HTMLElement} parentElement
 	 * @param {Number} startDate
 	 * @param {Array} dateArray    array of selected dates. unix millisecond timestamps.
