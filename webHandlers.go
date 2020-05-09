@@ -41,7 +41,7 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 	var newMeetUp MeetUp
 
 	// Decode the json into a MeetUp struct
-	if err = json.NewDecoder(io.LimitReader(r.Body, maxLongJsonBytesLen)).Decode(newMeetUp); err != nil { // 4KB max json length
+	if err = json.NewDecoder(io.LimitReader(r.Body, maxLongJsonBytesLen)).Decode(&newMeetUp); err != nil { // 4KB max json length
 		log.Printf("updateMeetUp invalid json: %s\n", err)
 		writeJsonError(w, "invalid json")
 		return
