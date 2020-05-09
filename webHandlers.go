@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -18,7 +19,23 @@ const maxShortJsonBytesLen = 512 // Limit the other JSON requests to this many b
 func pageEditHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';")
-	http.ServeFile(w, r, "templates/edit.html")
+
+	t := template.Must(template.ParseFiles("templates/edit.html"))
+
+	data := struct {
+		Title     string
+	}{
+		Title:     "Create a meet up",
+	}
+
+	if err := validateHash(r.FormValue("id")); err == nil {		// On valid adminhash, change the page title
+		data.Title = "Edit your meet up"
+	}
+
+	err := t.ExecuteTemplate(w, "edit", data)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Creates the page for https://host/view?id=userhash
