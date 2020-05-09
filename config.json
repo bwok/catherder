@@ -1,0 +1,9 @@
+{
+  "httpport": 80,
+  "httpsport": 443,
+  "emailsettings": {
+	"username": "",
+	"password": "",
+	"port": 587
+  }
+}

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/smtp"
 	"net/url"
+	"strconv"
 )
 
 // Sends an email to the given email address on meetup creation.
@@ -34,10 +35,10 @@ func sendUserChangedEmail(user User, emailAddress, userHash, serverHostname stri
 
 // Given an address, subject and mail body, sends an email to the address.
 func sendMail(emailAddress, subject, messageBody string) {
-	username := ""
-	password := ""
-	host := ""
-	port := "587"
+	username := ConfigObj.EmailSettings.UserName
+	password := ConfigObj.EmailSettings.Password
+	host := ConfigObj.EmailSettings.Host
+	port := strconv.Itoa(ConfigObj.EmailSettings.Port)
 
 	from := username
 	to := []string{emailAddress}

@@ -5,6 +5,7 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 var db *sql.DB
@@ -29,6 +30,7 @@ func main() {
 
 	// Redirect http traffic to https
 	httpServ := &http.Server{
+		Addr: ":" + strconv.Itoa(ConfigObj.HttpPort),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Connection", "close")
 			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
@@ -62,6 +64,7 @@ func main() {
 	})
 
 	httpsServ := &http.Server{
+		Addr: ":" + strconv.Itoa(ConfigObj.HttpsPort),
 		//		ReadTimeout:  5 * time.Second,		// uncomment if actually a problem in practise
 		//		WriteTimeout: 5 * time.Second,		// uncomment if actually a problem in practise
 	}
