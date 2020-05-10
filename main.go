@@ -49,13 +49,8 @@ func main() {
 	httpsServeMux.HandleFunc("/edit", pageEditHandler)
 	httpsServeMux.HandleFunc("/view", pageViewHandler)
 
-	// JSON handlers
-	httpsServeMux.HandleFunc("/api/updatemeetup", updateMeetUp)
-	httpsServeMux.HandleFunc("/api/getusermeetup", getUserMeetUp)
-	httpsServeMux.HandleFunc("/api/getadminmeetup", getAdminMeetUp)
-	httpsServeMux.HandleFunc("/api/deletemeetup", deleteMeetUp)
-	httpsServeMux.HandleFunc("/api/updateuser", updateUser)
-	httpsServeMux.HandleFunc("/api/deleteuser", deleteUser)
+	// JSON request/response handlers
+	httpsServeMux.HandleFunc("/api/", apiRouter)
 
 	httpsServeMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
