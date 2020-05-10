@@ -36,10 +36,17 @@ type Config struct {
 	EmailSettings EmailSettings `json:"emailsettings"`
 	HttpPort      int           `json:"httpport"`
 	HttpsPort     int           `json:"httpsport"`
+	DatabaseSettings DatabaseSettings `json:"databasesettings"`
 }
 type EmailSettings struct {
 	UserName string `json:"username"`
 	Password string `json:"password"`
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
+}
+type DatabaseSettings struct {
+	UserName string `json:"username"`
+	Password string `json:"password"`
+	Host     string `json:"host"`
+	Database     string    `json:"database"`
 }

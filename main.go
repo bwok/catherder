@@ -13,7 +13,7 @@ var db *sql.DB
 func main() {
 	var err error
 
-	connStr := "dbname=meetupdatabase user=meetupuser password=testpassword host=192.168.56.51 "
+	connStr := "dbname=" + ConfigObj.DatabaseSettings.Database + " user=" + ConfigObj.DatabaseSettings.UserName + " password=" + ConfigObj.DatabaseSettings.Password + " host=" + ConfigObj.DatabaseSettings.Host
 	if db, err = sql.Open("postgres", connStr); err != nil {
 		log.Fatal(err)
 	}

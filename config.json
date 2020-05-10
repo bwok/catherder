@@ -4,6 +4,13 @@
   "emailsettings": {
 	"username": "",
 	"password": "",
-	"port": 587
+	"port": 587,
+	"host": ""
+  },
+  "databasesettings": {
+	"host": "",
+	"username": "",
+	"password": "",
+	"database": ""
   }
 }
