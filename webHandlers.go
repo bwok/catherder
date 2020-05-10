@@ -9,6 +9,21 @@ import (
 const maxLongJsonBytesLen = 4096 // Limit create/update JSON requests to this many bytes
 const maxShortJsonBytesLen = 512 // Limit the other JSON requests to this many bytes
 
+// Routes all non /api/... requests
+func defaultRouter(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';")
+
+	switch r.URL.Path {
+	case "/edit":
+		pageEditHandler(w, r)
+	case "/view":
+		pageViewHandler(w, r)
+	default:
+		http.ServeFile(w, r, "templates/index.html")
+	}
+}
+
 // Handles requests to new.html
 func pageEditHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
