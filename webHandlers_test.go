@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"io/ioutil"
 	"net/http/httptest"
-	"os"
 	"testing"
 )
 
@@ -14,7 +11,6 @@ func TestPageNewHandler(t *testing.T) {
 	pageEditHandler(w, request)
 
 	response := w.Result()
-	body, _ := ioutil.ReadAll(response.Body)
 
 	if response.StatusCode != 200 {
 		t.Error("http status code was not 200")
@@ -29,17 +25,6 @@ func TestPageNewHandler(t *testing.T) {
 		t.Error("Content-Security-Policy header was wrong")
 	}
 
-	file, err := os.Open("templates/edit.html")
-	if err != nil {
-		t.Fatal(err)
-	}
-	htmlBytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if bytes.Compare(body, htmlBytes) != 0 {
-		t.Error("returned bytes for new.html differed to the one found on the filesystem.")
-	}
 }
 
 func TestAjaxCreateHandler(t *testing.T) {
