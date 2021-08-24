@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"log"
 )
 
@@ -39,19 +39,19 @@ var preparedStmts = make(map[string]*sql.Stmt)
 func prepareDatabaseStatements() {
 	// A map of sql statements that get prepared in prepareDatabaseStatements()
 	var prepStmtInit = map[string]string{
-		"insertMeetup":            `INSERT INTO meetup.meetup(userhash, adminhash, adminemail, sendalerts, dates, description) values($1,$2,$3,$4,$5,$6) RETURNING idmeetup`,
-		"selectMeetup":            `SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup.meetup WHERE idmeetup = $1`,
-		"updateMeetup":            `UPDATE meetup.meetup SET adminemail = $1, sendalerts = $2, dates = $3, description = $4 WHERE idmeetup = $5`,
-		"deleteMeetup":            `DELETE from meetup.meetup WHERE idmeetup = $1`,
-		"selectMeetupByUserhash":  `SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup.meetup WHERE userhash = $1`,
-		"selectMeetupByAdminhash": `SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup.meetup WHERE adminhash = $1`,
-		"deleteMeetupByAdminhash": `DELETE from meetup.meetup WHERE adminhash = $1`,
+		"insertMeetup":            `INSERT INTO meetup(userhash, adminhash, adminemail, sendalerts, dates, description) values(?,?,?,?,?,?)`,
+		"selectMeetup":            `SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup WHERE idmeetup = ?`,
+		"updateMeetup":            `UPDATE meetup SET adminemail = ?, sendalerts = ?, dates = ?, description = ? WHERE idmeetup = ?`,
+		"deleteMeetup":            `DELETE from meetup WHERE idmeetup = ?`,
+		"selectMeetupByUserhash":  `SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup WHERE userhash = ?`,
+		"selectMeetupByAdminhash": `SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup WHERE adminhash = ?`,
+		"deleteMeetupByAdminhash": `DELETE from meetup WHERE adminhash = ?`,
 
-		"insertUser":            `INSERT INTO meetup."user"(idmeetup, name, dates) values($1,$2,$3) RETURNING iduser`,
-		"selectUser":            `SELECT iduser,idmeetup,name,dates FROM meetup."user" WHERE iduser = $1`,
-		"updateUser":            `UPDATE meetup."user" SET name = $1, dates = $2 WHERE iduser = $3`,
-		"deleteUser":            `DELETE from meetup."user" WHERE iduser = $1`,
-		"selectUsersByMeetUpid": `SELECT * FROM meetup."user" WHERE idmeetup = $1`,
+		"insertUser":            `INSERT INTO "user"(idmeetup, name, dates) values(?,?,?)`,
+		"selectUser":            `SELECT iduser,idmeetup,name,dates FROM "user" WHERE iduser = ?`,
+		"updateUser":            `UPDATE "user" SET name = ?, dates = ? WHERE iduser = ?`,
+		"deleteUser":            `DELETE from "user" WHERE iduser = ?`,
+		"selectUsersByMeetUpid": `SELECT * FROM "user" WHERE idmeetup = ?`,
 	}
 
 	for key, val := range prepStmtInit {
@@ -74,7 +74,7 @@ func closeDatabaseStatements() {
 	}
 }
 
-// Set json output format and fields
+// MarshalJSON Set json output format and fields
 func (m *MeetUp) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		UserHash    string  `json:"userhash"`
@@ -95,7 +95,7 @@ func (m *MeetUp) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// Set json output format and fields
+// MarshalJSON Set json output format and fields
 func (u *User) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Name  string  `json:"name"`
@@ -106,7 +106,7 @@ func (u *User) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// Deletes a meetup by its admin hash. Deletes get cascaded to the other tables.
+// DeleteByAdminHash Deletes a meetup by its admin hash. Deletes get cascaded to the other tables.
 func (m *MeetUp) DeleteByAdminHash(adminHash string) error {
 	if _, err := preparedStmts["deleteMeetupByAdminhash"].Exec(adminHash); err != nil {
 		return err
@@ -115,7 +115,7 @@ func (m *MeetUp) DeleteByAdminHash(adminHash string) error {
 	return nil
 }
 
-// Selects a MeetUp row by the user hash
+// GetByUserHash Selects a MeetUp row by the user hash
 // Also gets all sub objects of the MeetUp row from the date, admin and user tables.
 func (m *MeetUp) GetByUserHash(userHash string) (retErr error) {
 	rows, retErr := preparedStmts["selectMeetupByUserhash"].Query(userHash)
@@ -129,10 +129,12 @@ func (m *MeetUp) GetByUserHash(userHash string) (retErr error) {
 	}()
 
 	if rows.Next() {
-		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, pq.Array(&m.Dates), &m.Description)
+		var datesBlob []byte
+		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, &datesBlob, &m.Description)
 		if retErr != nil {
 			return
 		}
+		m.Dates = convertBlobToDates(datesBlob)
 	} else {
 		retErr = errors.New("no rows matching the userhash")
 		return
@@ -147,7 +149,7 @@ func (m *MeetUp) GetByUserHash(userHash string) (retErr error) {
 	return nil
 }
 
-// Selects a MeetUp row by the admin hash
+// GetByAdminHash Selects a MeetUp row by the admin hash
 // Also gets all sub objects of the MeetUp row from the date, admin and user tables.
 func (m *MeetUp) GetByAdminHash(adminHash string) (retErr error) {
 	rows, retErr := preparedStmts["selectMeetupByAdminhash"].Query(adminHash)
@@ -161,10 +163,12 @@ func (m *MeetUp) GetByAdminHash(adminHash string) (retErr error) {
 	}()
 
 	if rows.Next() {
-		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, pq.Array(&m.Dates), &m.Description)
+		var datesBlob []byte
+		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, &datesBlob, &m.Description)
 		if retErr != nil {
 			return
 		}
+		m.Dates = convertBlobToDates(datesBlob)
 	} else {
 		retErr = errors.New("no rows matching the adminhash")
 		return
@@ -179,7 +183,7 @@ func (m *MeetUp) GetByAdminHash(adminHash string) (retErr error) {
 	return nil
 }
 
-// Selects all User rows with meetup id
+// GetAllByMeetUpId Selects all User rows with meetup id
 func (u *Users) GetAllByMeetUpId(idMeetUp int64) (retErr error) {
 	rows, retErr := preparedStmts["selectUsersByMeetUpid"].Query(idMeetUp)
 	if retErr != nil {
@@ -194,10 +198,12 @@ func (u *Users) GetAllByMeetUpId(idMeetUp int64) (retErr error) {
 	*u = make(Users, 0)
 	for rows.Next() {
 		var user = User{}
-		retErr = rows.Scan(&user.Id, &user.IdMeetUp, &user.Name, pq.Array(&user.Dates))
+		var datesBlob []byte
+		retErr = rows.Scan(&user.Id, &user.IdMeetUp, &user.Name, &datesBlob)
 		if retErr != nil {
 			return
 		}
+		user.Dates = convertBlobToDates(datesBlob)
 		*u = append(*u, user)
 	}
 

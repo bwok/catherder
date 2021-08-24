@@ -6,11 +6,5 @@
 	"password": "",
 	"port": 587,
 	"host": ""
-  },
-  "databasesettings": {
-	"host": "",
-	"username": "",
-	"password": "",
-	"database": ""
   }
 }

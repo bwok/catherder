@@ -38,7 +38,7 @@ var dateTool = new function(){
 
 	/**
 	 * Returns the selected dates as an array of timestamps (number type).
-	 * @returns {Array}
+	 * @returns {Array.<number>}
 	 */
 	this.getDates = function(){
 		return selectedDates;

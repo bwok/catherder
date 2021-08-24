@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"log"
@@ -47,4 +48,29 @@ func writeJsonError(w http.ResponseWriter, errString string) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+// convert dates []int64 to a []byte (sqlite blob type).
+func convertDatesToBlob(intSlice []int64) []byte {
+	var blobBytes []byte
+
+	for _, date := range intSlice {
+		buf := make([]byte, binary.MaxVarintLen64)
+		binary.PutVarint(buf, date)
+		blobBytes = append(blobBytes, buf...)
+	}
+
+	return blobBytes
+}
+
+// convert blob []byte to date []int64
+func convertBlobToDates(blobBytes []byte) []int64 {
+	var intSlice = make([]int64, 0)
+
+	for i := 0; i < len(blobBytes); i += binary.MaxVarintLen64 {
+		outInt, _ := binary.Varint(blobBytes[i : i+binary.MaxVarintLen64])
+		intSlice = append(intSlice, outInt)
+	}
+
+	return intSlice
 }
