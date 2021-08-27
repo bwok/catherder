@@ -11,8 +11,8 @@ import (
 )
 
 func TestMeetUp_DeleteByAdminHash(t *testing.T) {
-	openDbConn()
-	defer closeDbConn()
+	testDbName := CreateTestDb(t)
+	defer DestroyTestDb(testDbName)
 
 	var meetUpObj = MeetUp{
 		UserHash:    "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
@@ -39,8 +39,8 @@ func TestMeetUp_DeleteByAdminHash(t *testing.T) {
 }
 
 func TestMeetUp_GetByUserHash(t *testing.T) {
-	openDbConn()
-	defer closeDbConn()
+	testDbName := CreateTestDb(t)
+	defer DestroyTestDb(testDbName)
 
 	var meetUpObj = MeetUp{
 		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
@@ -85,8 +85,8 @@ func TestMeetUp_GetByUserHash(t *testing.T) {
 }
 
 func TestMeetUp_GetByAdminHash(t *testing.T) {
-	openDbConn()
-	defer closeDbConn()
+	testDbName := CreateTestDb(t)
+	defer DestroyTestDb(testDbName)
 
 	var meetUpObj = MeetUp{
 		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",

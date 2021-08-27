@@ -2,33 +2,62 @@ package main
 
 import (
 	"database/sql"
-	"log"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"testing"
 )
 
-func openDbConn() {
+// Creates a temporary database file
+func MakeTestFile(t *testing.T) string {
+	file, err := ioutil.TempFile("./", "test_db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	file.Close()
+	return file.Name()
+}
+
+// Creates a database file, a connection, all the needed database tables, foreign keys etc.
+func CreateTestDb(t *testing.T) string {
 	var err error
-	connStr := "dbname=meetupdatabase user=meetupuser password=testpassword host=192.168.56.51 "
-	if db, err = sql.Open("postgres", connStr); err != nil {
-		log.Fatal(err)
+	testDbName := MakeTestFile(t)
+
+	if db, err = sql.Open("sqlite3", "file:"+testDbName+"?_foreign_keys=1"); err != nil {
+		t.Fatal("Failed to open database:", err)
+	}
+
+	file, err := os.Open("dbSource.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fileBytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err = db.Exec(string(fileBytes)); err != nil {
+		t.Fatal("Failed to create database tables:", err)
 	}
 
 	// Prepare all the sql statements for later use
 	prepareDatabaseStatements()
+
+	return testDbName
 }
 
-func closeDbConn() {
-	if closeErr := db.Close(); closeErr != nil {
-		log.Println(closeErr)
-	}
-	closeDatabaseStatements()
+// Destroys the test database, closes the prepared statements etc
+func DestroyTestDb(testDbName string) {
+	defer os.Remove(testDbName)
+	defer db.Close()
+	defer closeDatabaseStatements()
 }
 
 // Tests the MeetUp.Read method too
 func TestMeetUp_Create(t *testing.T) {
-	openDbConn()
-	defer closeDbConn()
+	testDbName := CreateTestDb(t)
+	defer DestroyTestDb(testDbName)
 
 	var tests = []MeetUp{
 		{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"},
@@ -58,8 +87,8 @@ func TestMeetUp_Create(t *testing.T) {
 }
 
 func TestMeetUp_Update(t *testing.T) {
-	openDbConn()
-	defer closeDbConn()
+	testDbName := CreateTestDb(t)
+	defer DestroyTestDb(testDbName)
 
 	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 
@@ -90,8 +119,8 @@ func TestMeetUp_Update(t *testing.T) {
 }
 
 func TestMeetUp_Delete(t *testing.T) {
-	openDbConn()
-	defer closeDbConn()
+	testDbName := CreateTestDb(t)
+	defer DestroyTestDb(testDbName)
 
 	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 
@@ -116,8 +145,8 @@ func TestMeetUp_Delete(t *testing.T) {
 
 // Tests the User.Read method too
 func TestUser_Create(t *testing.T) {
-	openDbConn()
-	defer closeDbConn()
+	testDbName := CreateTestDb(t)
+	defer DestroyTestDb(testDbName)
 
 	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 	if err := meetUp.Create(); err != nil {
@@ -158,8 +187,8 @@ func TestUser_Create(t *testing.T) {
 }
 
 func TestUser_Update(t *testing.T) {
-	openDbConn()
-	defer closeDbConn()
+	testDbName := CreateTestDb(t)
+	defer DestroyTestDb(testDbName)
 
 	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 	if err := meetUp.Create(); err != nil {
@@ -195,8 +224,8 @@ func TestUser_Update(t *testing.T) {
 }
 
 func TestUser_Delete(t *testing.T) {
-	openDbConn()
-	defer closeDbConn()
+	testDbName := CreateTestDb(t)
+	defer DestroyTestDb(testDbName)
 
 	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 	if err := meetUp.Create(); err != nil {
