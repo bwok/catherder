@@ -1,34 +1,37 @@
 html, body {
-    font-size: 0.9em;
-    font-family: Verdana, Geneva, "Bitstream Vera Sans", "DejaVu Sans", sans-serif;
-}
-body {
-    padding: 2em;
-    margin: 0;
-}
-input, textarea {
-    font-family: inherit;
-    font-size: inherit;
-    box-sizing: border-box;
-}
-input[type=checkbox] {
-    margin: 0;
-    padding: 0;
-    vertical-align: middle;
-}
 
-
-
-.errorArea {
-    background-color: #ffd4dc;
-    margin: 2em 0;
-    padding: 1em;
-    border: 0.1rem solid #ff6c7e;
-    border-radius: 0.3em;
 }
-
-
 
 .hidden{
     display: none;
+}
+
+
+@media only screen and (min-width: 768px) {
+    html, body {
+        font-size: 0.9em;
+        font-family: Verdana, Geneva, "Bitstream Vera Sans", "DejaVu Sans", sans-serif;
+    }
+    body {
+        padding: 2em;
+        margin: 0;
+    }
+    input, textarea {
+        font-family: inherit;
+        font-size: inherit;
+        box-sizing: border-box;
+    }
+    input[type=checkbox] {
+        margin: 0;
+        padding: 0;
+        vertical-align: middle;
+    }
+
+    .errorArea {
+        background-color: #ffd4dc;
+        margin: 2em 0;
+        padding: 1em;
+        border: 0.1rem solid #ff6c7e;
+        border-radius: 0.3em;
+    }
 }

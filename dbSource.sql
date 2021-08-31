@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS meetup
     adminhash   TEXT    NOT NULL,
     adminemail  TEXT    NOT NULL,
     sendalerts  INTEGER NOT NULL,
-    dates       BLOB    NOT NULL,
+    dates       BLOB,
     description TEXT    NOT NULL
 );
 
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS "user"
     iduser   INTEGER PRIMARY KEY ASC NOT NULL,
     idmeetup INTEGER                 NOT NULL,
     name     TEXT                    NOT NULL,
-    dates    BLOB                    NOT NULL,
+    dates    BLOB,
     FOREIGN KEY (idmeetup) REFERENCES meetup (idmeetup) ON DELETE CASCADE
 );
 

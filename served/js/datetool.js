@@ -5,6 +5,8 @@
 var dateTool = new function(){
 	var currDate, parentContainer, dateScrollCont;
 	var selectedDates = [];		// UTC timestamps of selected dates, stored as numbers not strings.
+	var MAX_DATE_WIDTH = 10;
+	var MAX_DATE_HEIGHT = 4;
 	var numDateElements = 10;	// The number of visible date elements in the tool. Scrolls left and right by this many.
 	var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 	var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -33,6 +35,20 @@ var dateTool = new function(){
 		currDate = startDate;
 		selectedDates = dateArray;
 		parentContainer = parentElement;
+		this.calculateNumDateBoxes();
+	};
+
+	/**
+	 * Calculates how many date boxes can be fitted into the page.
+	 * Can be used to recalculate and redraw on screen resize.
+	 */
+	this.calculateNumDateBoxes = function(){
+		var datesWide = Math.floor(window.screen.width / 50) - 2;
+		if(datesWide > MAX_DATE_WIDTH){
+			numDateElements = MAX_DATE_WIDTH * 4;
+		} else {
+			numDateElements = datesWide * MAX_DATE_HEIGHT;
+		}
 		createSkeleton();
 	};
 

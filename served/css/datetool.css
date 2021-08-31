@@ -1,24 +1,26 @@
-
 /* Date tool css */
 .dateContainer {
+    font-size: 0.7rem;
     padding: 1em 0;
     fill: #aaaaaa;
     user-select: none;
+    box-sizing: border-box;
+    width: 100%;
 }
 .dateScrollCont {
     display: inline-block;
-    width: 40em;
+    width: 71.428571429%;
     box-sizing: border-box;
     border: none;
     outline: none;
     margin: 0;
     padding: 0;
 }
-.dateBox, .scrollBox{
+.dateBox, .scrollBox {
     box-sizing: border-box;
     display: inline-block;
     height: 5.5em;
-    border: 0.1rem solid #aaaaaa;
+    border: 0.1em solid #aaaaaa;
     color: #666666;
     border-radius: 0.2rem;
     text-align: center;
@@ -26,11 +28,11 @@
 }
 .dateBox {
     padding: 0.3em;
-    width: 4em;
+    width: 20%;
 }
 .scrollBox {
-    width: 3em;
-    padding: 2em 0;
+    width: 14.285714286%;
+    padding: 1.5em 0;
 }
 .scrollBox > svg {
     height: 100%;
@@ -42,16 +44,16 @@
 }
 .dateBox > .date {
     font-weight: bold;
-    font-size: 1.4rem;
+    font-size: 1.3rem;
 }
-.dateBox:hover, .scrollBox:hover {
+.dateBox:hover, .dateBox:active, .scrollBox:hover, .scrollBox:active {
     cursor: pointer;
     fill: #000000;
     border-color: #000000;
     color: #000000;
     box-shadow: 0.1rem 0.1rem #aaaaaa;
 }
-.selectedDate{
+.selectedDate {
     background-color: #fa8989;
 }
 .dateTable {
@@ -66,5 +68,25 @@
 .dateTable td:nth-child(1) {
     text-align: left;
     padding: 0.2em 0;
+}
+
+
+@media only screen and (min-width: 768px) {
+    .dateContainer {
+        font-size: inherit;
+    }
+    .dateScrollCont {
+        width: 40em;
+    }
+    .dateBox {
+        width: 4em;
+    }
+    .scrollBox {
+        width: 3em;
+        padding: 2em 0;
+    }
+    .dateBox > .date {
+        font-size: 1.4rem;
+    }
 }
 /* End date tool css */

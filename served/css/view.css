@@ -10,6 +10,7 @@
 }
 .shareLink {
     background-color: #ffffff;
+    word-break: break-all;
 }
 .description {
     margin-bottom: 2em;
@@ -26,24 +27,22 @@
 .checkDate {
     margin: 0.5em;
 }
-
-.columnsContainer {
-    white-space: nowrap;
-}
 .nameColumn {
     display: inline-block;
     overflow: hidden;
     width: 10em;
     vertical-align: top;
     border: 0.1rem solid #000000;
-    border-bottom: none;
 }
 .dateColumn {
     display: inline-block;
     vertical-align: top;
     text-align: center;
-    border-top: 0.1rem solid #000000;
-    border-right: 0.1rem solid #000000;
+    border: 0.1rem solid #000000;
+}
+.nameColumn, .dateColumn {
+    white-space: nowrap;
+    margin-bottom: 0.2rem;
 }
 .dummyBox {
     display: inline-block;
@@ -77,7 +76,6 @@
     box-sizing: border-box;
     padding: 0.3em;
     vertical-align: top;
-    border-bottom: 0.1rem solid #000000;
     background-color: #fff;
 }
 .row > svg {
@@ -92,7 +90,19 @@
 .rowUnavailable {
     background: #fcede9;
 }
-
 .saveButt {
     margin-top: 1em;
+    margin-right: 0.5em;
+    font-size: inherit;
+    padding: 0.3em 0.7em;
+}
+
+
+@media only screen and (min-width: 768px) {
+    .columnsContainer {
+        white-space: nowrap;
+    }
+    .dateColumn {
+        border-left: none;
+    }
 }
