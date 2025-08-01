@@ -40,7 +40,7 @@ func sendMail(emailAddress, subject, messageBody string) {
 	host := ConfigObj.EmailSettings.Host
 	port := strconv.Itoa(ConfigObj.EmailSettings.Port)
 
-	from := username
+	from := ConfigObj.EmailSettings.FromAddress
 	to := []string{emailAddress}
 	msg := []byte("To: " + emailAddress + "\r\n" +
 		"Subject: " + subject + "\r\n" +
@@ -51,5 +51,7 @@ func sendMail(emailAddress, subject, messageBody string) {
 	err := smtp.SendMail(host+":"+port, auth, from, to, msg)
 	if err != nil {
 		log.Printf("sending notification email failed (%s)", err)
+	} else {
+		log.Printf("email sent successfully to %q", emailAddress)
 	}
 }

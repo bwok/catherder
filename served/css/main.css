@@ -2,6 +2,10 @@ html, body {
 
 }
 
+.header{
+    font-size: 1.4em;
+    text-align: center;
+}
 .hidden{
     display: none;
 }
@@ -15,6 +19,10 @@ html, body {
     body {
         padding: 2em;
         margin: 0;
+    }
+    .header{
+        font-size: 1.8em;
+        text-align: left;
     }
     input, textarea {
         font-family: inherit;

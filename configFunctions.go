@@ -38,8 +38,9 @@ type Config struct {
 	HttpsPort     int           `json:"httpsport"`
 }
 type EmailSettings struct {
-	UserName string `json:"username"`
-	Password string `json:"password"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
+	UserName    string `json:"username"`
+	Password    string `json:"password"`
+	FromAddress string `json:"fromaddress"`
+	Host        string `json:"host"`
+	Port        int    `json:"port"`
 }

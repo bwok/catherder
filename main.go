@@ -24,7 +24,9 @@ func main() {
 		if db, err = sql.Open("sqlite3", "file:data.sqlite?_foreign_keys=true"); err != nil {
 			log.Fatal(err)
 		} else {
-			sqlStmt := `
+			if _, err = db.Exec(`
+			PRAGMA foreign_keys = ON;
+
 			CREATE TABLE IF NOT EXISTS meetup
 			(
 				idmeetup    INTEGER PRIMARY KEY ASC,
@@ -46,8 +48,7 @@ func main() {
 			);
 			
 			CREATE INDEX IF NOT EXISTS "user.fk_user_meetup_idx" ON "user" ("idmeetup");
-			`
-			if _, err = db.Exec(sqlStmt); err != nil {
+			`); err != nil {
 				log.Fatal(err)
 			}
 		}

@@ -32,13 +32,16 @@ func pageEditHandler(w http.ResponseWriter, r *http.Request) {
 	t := template.Must(template.ParseFiles("templates/edit.html"))
 
 	data := struct {
-		Title string
+		Title  string
+		Header string
 	}{
-		Title: "Create a meet up",
+		Title:  "Create a meet up",
+		Header: "Create Your Meet Up",
 	}
 
 	if err := validateHash(r.FormValue("id")); err == nil { // On valid adminhash, change the page title
 		data.Title = "Edit your meet up"
+		data.Header = "Edit Your Meet Up"
 	}
 
 	err := t.ExecuteTemplate(w, "edit", data)
