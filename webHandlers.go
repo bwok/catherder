@@ -1,13 +1,9 @@
 package main
 
 import (
-	"html/template"
 	"log"
 	"net/http"
 )
-
-const maxLongJsonBytesLen = 4096 // Limit create/update JSON requests to this many bytes
-const maxShortJsonBytesLen = 512 // Limit the other JSON requests to this many bytes
 
 // Routes all non /api/... requests
 func defaultRouter(w http.ResponseWriter, r *http.Request) {
@@ -17,10 +13,21 @@ func defaultRouter(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/edit":
 		pageEditHandler(w, r)
+		break
 	case "/view":
 		pageViewHandler(w, r)
+		break
 	default:
-		http.ServeFile(w, r, "templates/index.html")
+		t, httpCode := templateJobber("/index", nil)
+		if httpCode > 0 {
+			http.Error(w, http.StatusText(httpCode), httpCode)
+			if closeErr := r.Body.Close(); closeErr != nil {
+				log.Println(closeErr)
+			}
+			return
+		} else if err := t.ExecuteTemplate(w, "index.gohtml", nil); err != nil {
+			log.Println(err)
+		}
 	}
 }
 
@@ -29,7 +36,14 @@ func pageEditHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';")
 
-	t := template.Must(template.ParseFiles("templates/edit.html"))
+	t, httpCode := templateJobber(r.URL.Path, nil)
+	if httpCode > 0 {
+		http.Error(w, http.StatusText(httpCode), httpCode)
+		if closeErr := r.Body.Close(); closeErr != nil {
+			log.Println(closeErr)
+		}
+		return
+	}
 
 	data := struct {
 		Title  string
@@ -44,9 +58,9 @@ func pageEditHandler(w http.ResponseWriter, r *http.Request) {
 		data.Header = "Edit Your Meet Up"
 	}
 
-	err := t.ExecuteTemplate(w, "edit", data)
+	err := t.ExecuteTemplate(w, "edit.gohtml", data)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -54,5 +68,16 @@ func pageEditHandler(w http.ResponseWriter, r *http.Request) {
 func pageViewHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; connect-src 'self'; img-src 'self'; style-src 'self';")
 	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-	http.ServeFile(w, r, "templates/view.html")
+	t, httpCode := templateJobber(r.URL.Path, nil)
+	if httpCode > 0 {
+		http.Error(w, http.StatusText(httpCode), httpCode)
+		if closeErr := r.Body.Close(); closeErr != nil {
+			log.Println(closeErr)
+		}
+		return
+	}
+	err := t.ExecuteTemplate(w, "view.gohtml", nil)
+	if err != nil {
+		log.Println(err)
+	}
 }

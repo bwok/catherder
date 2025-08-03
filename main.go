@@ -2,16 +2,42 @@ package main
 
 import (
 	"database/sql"
+	"embed"
+	"flag"
 	_ "github.com/mattn/go-sqlite3"
+	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 )
 
 var db *sql.DB
 
+const maxLongJsonBytesLen = 4096 // Limit create/update JSON requests to this many bytes
+const maxShortJsonBytesLen = 512 // Limit the other JSON requests to this many bytes
+
+var (
+	//go:embed all:served
+	served embed.FS
+
+	//go:embed templates
+	res   embed.FS
+	pages = map[string]string{
+		"/index": "templates/index.gohtml",
+		"/edit":  "templates/edit.gohtml",
+		"/view":  "templates/view.gohtml",
+	}
+)
+
 func main() {
+	port := flag.String("port", "443", "-port=<port> The port to listen for https requests on.")
+	certPath := flag.String("cert", "./cert.pem", "-cert=<path> The path of the ssl certificate.")
+	keyPath := flag.String("key", "./key.pem", "-key=<path> The path of the ssl key.")
+	flag.Parse()
+
+	log.Printf("Pass command line arguments port:%q, cert:%q, key:%q", *port, *certPath, *keyPath)
+
 	var err error
 
 	// Check the database file is present, open it
@@ -64,27 +90,34 @@ func main() {
 	prepareDatabaseStatements()
 	defer closeDatabaseStatements()
 
-	// Redirect http traffic to https
-	httpServ := &http.Server{
-		Addr: ":" + strconv.Itoa(ConfigObj.HttpPort),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Connection", "close")
-			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-			url := "https://" + r.Host + r.URL.String()
-			http.Redirect(w, r, url, http.StatusMovedPermanently)
-		}),
-	}
-	go func() { log.Fatal(httpServ.ListenAndServe()) }()
-
 	// Serve https traffic
-	httpsServeMux := http.NewServeMux()
-	httpsServeMux.Handle("/served/", http.StripPrefix("/served/", http.FileServer(http.Dir("./served/"))))
-	httpsServeMux.HandleFunc("/api/", apiRouter) // JSON request/response handlers
-	httpsServeMux.HandleFunc("/", defaultRouter) // All non /served/ or /api/ requests
-
-	httpsServ := &http.Server{
-		Addr: ":" + strconv.Itoa(ConfigObj.HttpsPort),
+	servedDir, err := fs.Sub(served, "served")
+	if err != nil {
+		log.Fatal(err)
 	}
-	httpsServ.Handler = httpsServeMux
-	log.Fatal(httpsServ.ListenAndServeTLS("./cert.pem", "./key.pem"))
+	http.Handle("/served/", http.StripPrefix("/served/", http.FileServer(http.FS(servedDir))))
+	http.HandleFunc("/api/", apiRouter) // JSON request/response handlers
+	http.HandleFunc("/", defaultRouter) // All non /served/ or /api/ requests
+	log.Fatal(http.ListenAndServeTLS(":"+*port, *certPath, *keyPath, nil))
+}
+
+// templateJobber Parses a cached template file
+func templateJobber(path string, funcMap *template.FuncMap) (*template.Template, int) {
+	filePath, ok := pages[path]
+	if !ok {
+		log.Printf("filePath %s not found in pages cache...", path)
+		return nil, http.StatusNotFound
+	}
+
+	var t *template.Template
+	if funcMap != nil {
+		t = template.New("").Funcs(*funcMap)
+	}
+
+	t, err := t.ParseFS(res, filePath)
+	if err != nil {
+		log.Printf("error parsing template: %v", err)
+		return nil, http.StatusInternalServerError
+	}
+	return t, -1
 }

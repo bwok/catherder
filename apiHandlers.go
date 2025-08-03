@@ -16,16 +16,22 @@ func apiRouter(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/api/updatemeetup":
 		updateMeetUp(w, r)
+		break
 	case "/api/getusermeetup":
 		getUserMeetUp(w, r)
+		break
 	case "/api/getadminmeetup":
 		getAdminMeetUp(w, r)
+		break
 	case "/api/deletemeetup":
 		deleteMeetUp(w, r)
+		break
 	case "/api/updateuser":
 		updateUser(w, r)
+		break
 	case "/api/deleteuser":
 		deleteUser(w, r)
+		break
 	default:
 		http.Error(w, "not found", http.StatusNotFound)
 	}
@@ -102,10 +108,6 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 			log.Printf("ajaxCreateHandler: err creating database rows: %s\n", err)
 			writeJsonError(w, "Error creating new meetup.")
 			return
-		}
-
-		if newMeetUp.SendAlerts == true && newMeetUp.AdminEmail != "" {
-			sendCreationEmail(newMeetUp, r.Host)
 		}
 	} else {
 		// Check the adminhash is valid
@@ -397,9 +399,6 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			userPresent = true
-			if meetUpObj.SendAlerts == true && meetUpObj.AdminEmail != "" {
-				sendUserChangedEmail(userObj, meetUpObj.AdminEmail, meetUpObj.UserHash, r.Host, false)
-			}
 			break
 		}
 	}
@@ -410,9 +409,6 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 			log.Printf("updateUser: error creating users: %s\n", err)
 			writeJsonError(w, "database error creating user.")
 			return
-		}
-		if meetUpObj.SendAlerts == true && meetUpObj.AdminEmail != "" {
-			sendUserChangedEmail(user, meetUpObj.AdminEmail, meetUpObj.UserHash, r.Host, true)
 		}
 	}
 
@@ -472,9 +468,6 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 				log.Printf("deleteUser: err deleting user: %s\n", err)
 				writeJsonError(w, "database error.")
 				return
-			}
-			if meetUpObj.SendAlerts == true && meetUpObj.AdminEmail != "" {
-				sendUserChangedEmail(userObj, meetUpObj.AdminEmail, meetUpObj.UserHash, r.Host, false)
 			}
 		}
 	}

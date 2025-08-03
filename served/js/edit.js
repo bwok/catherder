@@ -1,14 +1,12 @@
 "use strict";
 
 var editObj = new function(){
-	var errorArea, dateContainer, adminhash, descrElem, emailElem, notifyElem;
+	var errorArea, dateContainer, adminhash, descrElem;
 
 	this.init = function(){
 		errorArea = document.getElementById('errorArea');
 		dateContainer = document.getElementById('dateContainer');
 		descrElem = document.getElementById("description");
-		emailElem = document.getElementById("adminEmail");
-		notifyElem = document.getElementById("notifications");
 
 		var params = new URLSearchParams(window.location.search.substring(1));
 		adminhash = params.get("id");
@@ -63,8 +61,6 @@ var editObj = new function(){
 			} else if(response.error !== ""){
 				showError(response.error);
 			} else{
-				emailElem.value = response.result.adminemail;
-				notifyElem.checked = response.result.sendalerts;
 				descrElem.value = response.result.description;
 
 				if(response.result.dates.length === 0){
@@ -88,9 +84,7 @@ var editObj = new function(){
 			adminhash: adminhash,
 			description: descrElem.value,
 			dates: dateTool.getDates(),
-			users: [],
-			adminemail: emailElem.value,
-			sendalerts: notifyElem.checked
+			users: []
 		};
 
 		sendAjaxRequest("/api/updatemeetup", JSON.stringify(args), function(error, response){
