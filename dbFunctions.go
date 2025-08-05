@@ -23,8 +23,6 @@ type MeetUp struct {
 	Id          int64
 	UserHash    string  `json:"userhash"`
 	AdminHash   string  `json:"adminhash"`
-	AdminEmail  string  `json:"adminemail"`
-	SendAlerts  bool    `json:"sendalerts"`
 	Dates       []int64 `json:"dates"` // This is a UNIX timestamp in milliseconds, as per ecma script defines it. "The number of milliseconds between 1 January 1970 00:00:00 UTC and the given date."
 	Description string  `json:"description"`
 	Users       Users   `json:"users"`
@@ -39,12 +37,12 @@ var preparedStmts = make(map[string]*sql.Stmt)
 func prepareDatabaseStatements() {
 	// A map of sql statements that get prepared in prepareDatabaseStatements()
 	var prepStmtInit = map[string]string{
-		"insertMeetup":            `INSERT INTO meetup(userhash, adminhash, adminemail, sendalerts, dates, description) values(?,?,?,?,?,?)`,
-		"selectMeetup":            `SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup WHERE idmeetup = ?`,
-		"updateMeetup":            `UPDATE meetup SET adminemail = ?, sendalerts = ?, dates = ?, description = ? WHERE idmeetup = ?`,
+		"insertMeetup":            `INSERT INTO meetup(userhash, adminhash, dates, description) values(?,?,?,?)`,
+		"selectMeetup":            `SELECT idmeetup, userhash, adminhash, dates, description FROM meetup WHERE idmeetup = ?`,
+		"updateMeetup":            `UPDATE meetup SET dates = ?, description = ? WHERE idmeetup = ?`,
 		"deleteMeetup":            `DELETE from meetup WHERE idmeetup = ?`,
-		"selectMeetupByUserhash":  `SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup WHERE userhash = ?`,
-		"selectMeetupByAdminhash": `SELECT idmeetup, userhash, adminhash, adminemail, sendalerts, dates, description FROM meetup WHERE adminhash = ?`,
+		"selectMeetupByUserhash":  `SELECT idmeetup, userhash, adminhash, dates, description FROM meetup WHERE userhash = ?`,
+		"selectMeetupByAdminhash": `SELECT idmeetup, userhash, adminhash, dates, description FROM meetup WHERE adminhash = ?`,
 		"deleteMeetupByAdminhash": `DELETE from meetup WHERE adminhash = ?`,
 
 		"insertUser":            `INSERT INTO "user"(idmeetup, name, dates) values(?,?,?)`,
@@ -79,16 +77,12 @@ func (m *MeetUp) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		UserHash    string  `json:"userhash"`
 		AdminHash   string  `json:"adminhash"`
-		AdminEmail  string  `json:"adminemail"`
-		SendAlerts  bool    `json:"sendalerts"`
 		Dates       []int64 `json:"dates"`
 		Description string  `json:"description"`
 		Users       Users   `json:"users"`
 	}{
 		m.UserHash,
 		m.AdminHash,
-		m.AdminEmail,
-		m.SendAlerts,
 		m.Dates,
 		m.Description,
 		m.Users,
@@ -130,7 +124,7 @@ func (m *MeetUp) GetByUserHash(userHash string) (retErr error) {
 
 	if rows.Next() {
 		var datesBlob []byte
-		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, &datesBlob, &m.Description)
+		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &datesBlob, &m.Description)
 		if retErr != nil {
 			return
 		}
@@ -164,7 +158,7 @@ func (m *MeetUp) GetByAdminHash(adminHash string) (retErr error) {
 
 	if rows.Next() {
 		var datesBlob []byte
-		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, &datesBlob, &m.Description)
+		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &datesBlob, &m.Description)
 		if retErr != nil {
 			return
 		}

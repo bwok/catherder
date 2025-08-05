@@ -12,9 +12,7 @@ REQUEST:
             name: string,
             dates: [ int, ... ]     // dates the user is available for. Signed 64 bit millisecond UNIX timestamp
         }, ....
-    ],
-    adminemail: string,
-    sendalerts: boolean
+    ]
 }
 RESPONSE:
 {
@@ -62,9 +60,7 @@ RESPONSE:
                 name: string,
                 dates: [ int, ... ]     // dates the user is available for. Signed 64 bit millisecond UNIX timestamp
             }, ....
-        ],
-         adminemail: string,
-         sendalerts: boolean
+        ]
     },
     error: string
 }

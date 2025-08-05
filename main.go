@@ -36,8 +36,6 @@ func main() {
 	keyPath := flag.String("key", "./key.pem", "-key=<path> The path of the ssl key.")
 	flag.Parse()
 
-	log.Printf("Pass command line arguments port:%q, cert:%q, key:%q", *port, *certPath, *keyPath)
-
 	var err error
 
 	// Check the database file is present, open it
@@ -58,8 +56,6 @@ func main() {
 				idmeetup    INTEGER PRIMARY KEY ASC,
 				userhash    TEXT    NOT NULL,
 				adminhash   TEXT    NOT NULL,
-				adminemail  TEXT    NOT NULL,
-				sendalerts  INTEGER NOT NULL,
 				dates       BLOB    NOT NULL,
 				description TEXT    NOT NULL
 			);
@@ -98,6 +94,7 @@ func main() {
 	http.Handle("/served/", http.StripPrefix("/served/", http.FileServer(http.FS(servedDir))))
 	http.HandleFunc("/api/", apiRouter) // JSON request/response handlers
 	http.HandleFunc("/", defaultRouter) // All non /served/ or /api/ requests
+	log.Printf("Server starting up, listening at: :%s", *port)
 	log.Fatal(http.ListenAndServeTLS(":"+*port, *certPath, *keyPath, nil))
 }
 
@@ -109,9 +106,9 @@ func templateJobber(path string, funcMap *template.FuncMap) (*template.Template,
 		return nil, http.StatusNotFound
 	}
 
-	var t *template.Template
+	t := template.New("")
 	if funcMap != nil {
-		t = template.New("").Funcs(*funcMap)
+		t.Funcs(*funcMap)
 	}
 
 	t, err := t.ParseFS(res, filePath)

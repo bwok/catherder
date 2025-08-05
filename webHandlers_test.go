@@ -6,7 +6,7 @@ import (
 )
 
 func TestPageNewHandler(t *testing.T) {
-	request := httptest.NewRequest("GET", "https://localhost/new.html", nil)
+	request := httptest.NewRequest("GET", "https://localhost/edit", nil)
 	w := httptest.NewRecorder()
 	pageEditHandler(w, request)
 

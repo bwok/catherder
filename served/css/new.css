@@ -10,11 +10,6 @@ button {
     box-sizing: border-box;
     font-size: inherit;
 }
-#adminEmail {
-    width: 100%;
-    box-sizing: border-box;
-    font-size: inherit;
-}
 #linkArea {
     margin-bottom: 4em;
 }
@@ -47,9 +42,6 @@ button {
 
 @media only screen and (min-width: 768px) {
     #description {
-        width: 30em;
-    }
-    #adminEmail {
         width: 30em;
     }
     #userLink {

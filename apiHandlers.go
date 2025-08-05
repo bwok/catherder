@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/mail"
 )
 
 // Routes all /api/... requests
@@ -54,14 +53,6 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 		log.Printf("updateMeetUp invalid json: %s\n", err)
 		writeJsonError(w, "invalid json")
 		return
-	}
-
-	// Validate email address. Must be either an empty string or a valid email address.
-	if newMeetUp.AdminEmail != "" {
-		if _, err = mail.ParseAddress(newMeetUp.AdminEmail); err != nil {
-			writeJsonError(w, "invalid email address")
-			return
-		}
 	}
 
 	// Validate dates
@@ -132,8 +123,6 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Update the database.
-		currMeetUp.AdminEmail = newMeetUp.AdminEmail
-		currMeetUp.SendAlerts = newMeetUp.SendAlerts
 		currMeetUp.Dates = newMeetUp.Dates
 		currMeetUp.Description = newMeetUp.Description
 

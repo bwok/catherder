@@ -5,8 +5,6 @@ CREATE TABLE IF NOT EXISTS meetup
     idmeetup    INTEGER PRIMARY KEY ASC,
     userhash    TEXT    NOT NULL,
     adminhash   TEXT    NOT NULL,
-    adminemail  TEXT    NOT NULL,
-    sendalerts  INTEGER NOT NULL,
     dates       BLOB,
     description TEXT    NOT NULL
 );

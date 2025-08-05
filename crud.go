@@ -9,7 +9,7 @@ import (
 func (m *MeetUp) Create() error {
 	datesBlob := convertDatesToBlob(m.Dates)
 
-	result, err := preparedStmts["insertMeetup"].Exec(m.UserHash, m.AdminHash, m.AdminEmail, m.SendAlerts, datesBlob, m.Description)
+	result, err := preparedStmts["insertMeetup"].Exec(m.UserHash, m.AdminHash, datesBlob, m.Description)
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func (m *MeetUp) Read(id int64) (retErr error) {
 
 	if rows.Next() {
 		var datesBlob []byte
-		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &m.AdminEmail, &m.SendAlerts, &datesBlob, &m.Description)
+		retErr = rows.Scan(&m.Id, &m.UserHash, &m.AdminHash, &datesBlob, &m.Description)
 		if retErr != nil {
 			return
 		}
@@ -48,7 +48,7 @@ func (m *MeetUp) Read(id int64) (retErr error) {
 }
 func (m *MeetUp) Update() error {
 	datesBlob := convertDatesToBlob(m.Dates)
-	_, err := preparedStmts["updateMeetup"].Exec(m.AdminEmail, m.SendAlerts, datesBlob, m.Description, m.Id)
+	_, err := preparedStmts["updateMeetup"].Exec(datesBlob, m.Description, m.Id)
 	if err != nil {
 		return err
 	}

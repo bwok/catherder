@@ -17,8 +17,6 @@ func TestMeetUp_DeleteByAdminHash(t *testing.T) {
 	var meetUpObj = MeetUp{
 		UserHash:    "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
 		AdminHash:   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-		AdminEmail:  "testy@testy.test",
-		SendAlerts:  true,
 		Dates:       []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
 		Users:       Users{},
 		Description: "ljkas;ldfjk;asldkjf",
@@ -43,11 +41,9 @@ func TestMeetUp_GetByUserHash(t *testing.T) {
 	defer DestroyTestDb(testDbName)
 
 	var meetUpObj = MeetUp{
-		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash:  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-		AdminEmail: "testy@testy.test",
-		SendAlerts: true,
-		Dates:      []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
+		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		Dates:     []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
 		Users: Users{
 			{Name: "user1", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
 			{Name: "user2", Dates: []int64{1550401200000, 1550574000000}},
@@ -89,11 +85,9 @@ func TestMeetUp_GetByAdminHash(t *testing.T) {
 	defer DestroyTestDb(testDbName)
 
 	var meetUpObj = MeetUp{
-		UserHash:   "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
-		AdminHash:  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-		AdminEmail: "testy@testy.test",
-		SendAlerts: true,
-		Dates:      []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
+		UserHash:  "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
+		AdminHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		Dates:     []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
 		Users: Users{
 			{Name: "user1", Dates: []int64{1550401200000, 1550487600000, 1550574000000}},
 			{Name: "user2", Dates: []int64{1550401200000, 1550574000000}},
@@ -134,8 +128,6 @@ func TestMeetUp_MarshalJSON(t *testing.T) {
 	var meetUpObj = MeetUp{
 		UserHash:    "8d9d7c59eec27a7aee55536582e45afb18f072c282edd22474a0db0676d74299",
 		AdminHash:   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-		AdminEmail:  "testy@testy.test",
-		SendAlerts:  true,
 		Dates:       []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000},
 		Users:       Users{},
 		Description: "ljkas;ldfjk;asldkjf",
@@ -152,7 +144,7 @@ func TestMeetUp_MarshalJSON(t *testing.T) {
 // Helper functions to compare some of the properties of various database objects.
 // The IDs don't get compared as one of the passed objects usually doesn't have any
 func compareMeetUpObjects(obj1, obj2 MeetUp) bool {
-	if obj1.UserHash != obj2.UserHash || obj1.AdminHash != obj2.AdminHash || obj1.AdminEmail != obj2.AdminEmail || obj1.SendAlerts != obj2.SendAlerts || reflect.DeepEqual(obj1.Dates, obj2.Dates) == false || obj1.Description != obj2.Description {
+	if obj1.UserHash != obj2.UserHash || obj1.AdminHash != obj2.AdminHash || reflect.DeepEqual(obj1.Dates, obj2.Dates) == false || obj1.Description != obj2.Description {
 		return false
 	}
 	if compareUsersObject(obj1.Users, obj2.Users) == false {

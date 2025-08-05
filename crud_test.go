@@ -60,8 +60,8 @@ func TestMeetUp_Create(t *testing.T) {
 	defer DestroyTestDb(testDbName)
 
 	var tests = []MeetUp{
-		{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"},
-		{Id: -1, UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{}, Description: "meetUp description"},
+		{UserHash: "abc", AdminHash: "def", Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"},
+		{Id: -1, UserHash: "abc", AdminHash: "def", Dates: []int64{}, Description: "meetUp description"},
 	}
 
 	for _, meetUp := range tests {
@@ -90,14 +90,12 @@ func TestMeetUp_Update(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
+	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 
 	if err := meetUp.Create(); err != nil {
 		t.Fatalf("create failed: %s\n", err)
 	}
 
-	meetUp.AdminEmail = "abc@def.hij"
-	meetUp.SendAlerts = false
 	meetUp.Dates = []int64{1550401200000}
 	meetUp.Description = "rst"
 	if err := meetUp.Update(); err != nil {
@@ -122,7 +120,7 @@ func TestMeetUp_Delete(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
+	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 
 	if err := meetUp.Create(); err != nil {
 		t.Fatalf("create failed: %s\n", err)
@@ -148,7 +146,7 @@ func TestUser_Create(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
+	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 	if err := meetUp.Create(); err != nil {
 		t.Errorf("meetUp create failed: %s\n", err)
 	}
@@ -190,7 +188,7 @@ func TestUser_Update(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
+	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 	if err := meetUp.Create(); err != nil {
 		t.Fatalf("create failed: %s\n", err)
 	}
@@ -227,7 +225,7 @@ func TestUser_Delete(t *testing.T) {
 	testDbName := CreateTestDb(t)
 	defer DestroyTestDb(testDbName)
 
-	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", AdminEmail: "testy@testy.test", SendAlerts: true, Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
+	var meetUp = MeetUp{UserHash: "abc", AdminHash: "def", Dates: []int64{1550401200000, 1550487600000, 1550574000000, 1550660400000, 1550746800000, 1550833200000, 1550919600000, 1551006000000}, Description: "meetUp description"}
 	if err := meetUp.Create(); err != nil {
 		t.Fatalf("create failed: %s\n", err)
 	}
