@@ -2,7 +2,7 @@ package main
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -84,7 +84,7 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 			log.Printf("updateMeetUp failed: error reading random bytes for user hash. %s\n", err)
 			writeJsonError(w, "Error reading random bytes.")
 		}
-		newMeetUp.UserHash = fmt.Sprintf("%x", sha256.Sum256(randBytes))
+		newMeetUp.UserHash = fmt.Sprintf("%x", sha512.Sum512(randBytes))
 
 		// Generate the admin hash
 		randBytes = make([]byte, randByteLen)
@@ -92,7 +92,7 @@ func updateMeetUp(w http.ResponseWriter, r *http.Request) {
 			log.Printf("updateMeetUp failed: error reading random bytes for admin hash. %s\n", err)
 			writeJsonError(w, "Error reading random bytes.")
 		}
-		newMeetUp.AdminHash = fmt.Sprintf("%x", sha256.Sum256(randBytes))
+		newMeetUp.AdminHash = fmt.Sprintf("%x", sha512.Sum512(randBytes))
 
 		err = newMeetUp.Create()
 		if err != nil {
